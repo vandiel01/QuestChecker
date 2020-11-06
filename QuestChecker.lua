@@ -1,7 +1,7 @@
 ﻿--Thanks to Crieve for ATT (AllTheThings) Icon (if you have ATT installed, it will appear)
 
-local vQC_Title = "|cffffff00"..strsub(GetAddOnMetadata("QChecker", "Title"),2).."|r"
-local vQC_Version = GetAddOnMetadata("QChecker", "Version")
+local vQC_Title = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r"
+local vQC_Version = GetAddOnMetadata("QuestChecker", "Version")
 local _G = _G["C_QuestLog"]
 
 --local TestNbr = "43341" --Uniting the Isle, popular BSI Starting Quest
@@ -155,7 +155,7 @@ local vQC_QFrame = CreateFrame("Frame", "vQC_QFrame", vQC_MFrame, BackdropTempla
 			vQC_QTBoxB:SetScript("OnClick", function() CheckQuest() end)
 	local vQC_QFrameIATT = CreateFrame("Button", "vQC_QFrameIATT", vQC_QFrame)
 		vQC_QFrameIATT:SetSize(22,22)
-		vQC_QFrameIATT:SetNormalTexture("Interface\\Addons\\QChecker\\Images\\logo_32x32")
+		vQC_QFrameIATT:SetNormalTexture("Interface\\Addons\\QuestChecker\\Images\\logo_32x32")
 		vQC_QFrameIATT:SetPoint("RIGHT", vQC_QFrame, -10, 0)
 		vQC_QFrameIATT:SetScript("OnEnter", function() vQC_Tooltips("ATTIcon",vQC_QFrameIATT) end)
 		vQC_QFrameIATT:SetScript("OnLeave", function() vQC_Tooltips(0) end)
