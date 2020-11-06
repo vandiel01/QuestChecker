@@ -12,11 +12,11 @@ You can also contribute to the addon by [Donate] https://paypal.me/Vandiel01
 /qc to use 
 
 ## Image Samples
-###### Normal Frame w/ AllTheThings
+###### Normal Frame w/ AllTheThings Installed
  ![QCSample1](Images/Image1.png)
-###### Normal Frame w/ AllTheThings
+###### Normal Frame w/ AllTheThings Installed
  ![QCSample2](Images/Image2.png)
-###### Normal Frame w/ AllTheThings
+###### Normal Frame w/ AllTheThings Installed
  ![QCSample3](Images/Image3.png)
 ###### Normal Frame w/o AllTheThings
  ![QCSample4](Images/Image4.png)
