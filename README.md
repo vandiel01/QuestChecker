@@ -13,10 +13,10 @@ You can also contribute to the addon by [Donate] https://paypal.me/Vandiel01
 
 ## Image Samples
 ###### Normal Frame w/ AllTheThings
- ![QCSample1](Images/Sample1.png)
+ ![QCSample1](Images/Image1.png)
 ###### Normal Frame w/ AllTheThings
- ![QCSample2](Images/Sample2.png)
+ ![QCSample2](Images/Image2.png)
 ###### Normal Frame w/ AllTheThings
- ![QCSample3](Images/Sample3.png)
+ ![QCSample3](Images/Image3.png)
 ###### Normal Frame w/o AllTheThings
- ![QCSample4](Images/Sample4.png)
+ ![QCSample4](Images/Image4.png)
