@@ -14,6 +14,7 @@ local vQC_Tooltips = function(arg, frame)
 	if arg == "QuestID" then msg = "Put in QuestID to check if you completed or not." end
 	if arg == "ATTIcon" then msg = "You have |cffffff00AllTheThings|r!" end
 	if arg == "QTBox" then msg = "Put in the Quest ID (Number Only)" end
+	if arg == "Nothing" then msg = "This does nothing at the moment, but shows QuestID" end
 	GameTooltip:AddLine(msg,1,1,1,1)
 	GameTooltip:Show()
 end
@@ -34,9 +35,32 @@ function OpenQC()
 		end
 	end
 end
+local function QuestInfo(event)
+	local questID = GetQuestID()
+	if QuestMapFrame.DetailsFrame.questID ~= nil then
+		questID = QuestMapFrame.DetailsFrame.questID
+	end
+	if questID == 0 then
+		vQC_QFIcon:Hide()
+		vQC_WFIcon:Hide()
+		return	
+	end
+	if QuestFrame:IsVisible() then
+		vQC_QFIcon:Show()
+		vQC_WFIcon:Hide()
+		vQC_QFIcon.N:SetText(questID)
+		vQC_QFIcon.T:SetPoint("RIGHT", vQC_QFIcon.N, 0-vQC_QFIcon.N:GetWidth(), 0)
+	end
+	if QuestMapFrame.DetailsFrame:IsVisible() then
+		vQC_WFIcon:Show()
+		vQC_QFIcon:Hide()
+		vQC_WFIcon.N:SetText(questID)
+		vQC_WFIcon.T:SetPoint("RIGHT", vQC_WFIcon.N, 0-vQC_WFIcon.N:GetWidth(), 0)
+	end
+	--print("QuestID: "..questID.." - Event Fired: "..event) --Debugging Purpose
+end
 
 local function CheckQuest()
---GetQuestObjectives (Future, a tooltip)
 	if (_G.GetTitleForQuestID(vQC_QTBox:GetNumber()) ~= nil) then
 		if (select(1,_G.IsQuestFlaggedCompleted(vQC_QTBox:GetNumber()))) then
 			msg = "Quest is completed\n\n"
@@ -97,6 +121,34 @@ local DefaultBackdrop = {
 	edgeSize = 16,
 	insets = { left = 4, right = 4, top = 4, bottom = 4 }
 }
+--Mini Frame
+local vQC_QFIcon = CreateFrame("Button", "vQC_QFIcon", QuestFrame)
+	vQC_QFIcon:SetSize(20,20)
+	vQC_QFIcon:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\TrivialQuests")
+	vQC_QFIcon:SetPoint("TOPRIGHT", QuestFrame, -5, -30)
+	vQC_QFIcon:SetScript("OnEnter", function() vQC_Tooltips("Nothing",vQC_QFIcon) end)
+	vQC_QFIcon:SetScript("OnLeave", function() vQC_Tooltips(0) end)
+		vQC_QFIcon.N = vQC_QFIcon:CreateFontString("T")
+		vQC_QFIcon.N:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+		vQC_QFIcon.N:SetPoint("RIGHT", vQC_QFIcon, 0-vQC_QFIcon:GetWidth(), 0)
+		vQC_QFIcon.T = vQC_QFIcon:CreateFontString("T")
+		vQC_QFIcon.T:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+		vQC_QFIcon.T:SetPoint("RIGHT", vQC_QFIcon.N, 0-vQC_QFIcon.N:GetWidth(), 0)
+		vQC_QFIcon.T:SetText("Quest ID: ")
+local vQC_WFIcon = CreateFrame("Button", "vQC_WFIcon", QuestMapFrame)
+	vQC_WFIcon:SetSize(20,20)
+	vQC_WFIcon:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\TrivialQuests")
+	vQC_WFIcon:SetPoint("TOPRIGHT", QuestMapFrame, -5, -10)
+	vQC_WFIcon:SetScript("OnEnter", function() vQC_Tooltips("Nothing",vQC_WFIcon) end)
+	vQC_WFIcon:SetScript("OnLeave", function() vQC_Tooltips(0) end)
+		vQC_WFIcon.N = vQC_WFIcon:CreateFontString("T")
+		vQC_WFIcon.N:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+		vQC_WFIcon.N:SetPoint("RIGHT", vQC_WFIcon, 0-vQC_WFIcon:GetWidth(), 0)
+		vQC_WFIcon.T = vQC_WFIcon:CreateFontString("T")
+		vQC_WFIcon.T:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+		vQC_WFIcon.T:SetPoint("RIGHT", vQC_WFIcon.N, 0-vQC_WFIcon.N:GetWidth(), 0)
+		vQC_WFIcon.T:SetText("Quest ID: ")
+
 --Main Frame
 local vQC_MFrame = CreateFrame("Frame", "vQC_MFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 	vQC_MFrame:SetBackdrop(DefaultBackdrop)
@@ -220,12 +272,28 @@ local vQC_IFrame = CreateFrame("Frame", "vQC_IFrame", vQC_MFrame, BackdropTempla
 -------------------------------------------------------
 local vQC_OnUpdate = CreateFrame("Frame")
 	vQC_OnUpdate:RegisterEvent("PLAYER_LOGIN")
+	local QEvents = {
+		"SPELL_ACTIVATION_OVERLAY_HIDE", --Very Odd Updates, Calls Frequently
+		"QUEST_DATA_LOAD_RESULT",
+		"QUEST_DETAIL",
+		"QUEST_LOG_CRITERIA_UPDATE",
+		"QUEST_LOG_UPDATE",
+		"QUEST_WATCH_LIST_CHANGED",
+		"QUEST_WATCH_UPDATE",
+		"QUESTLINE_UPDATE",
+	}
 	
 vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_Title.." v"..vQC_Version)
 		vQC_MFrame:Hide()
-		--do nothing
+		vQC_QFIcon:Hide()
+		vQC_WFIcon:Hide()
+		for ev = 1, #QEvents do
+			vQC_OnUpdate:RegisterEvent(QEvents[ev])
+		end
+	else
+		QuestInfo(event)
 	end
 end)
 
