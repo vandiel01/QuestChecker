@@ -19,13 +19,24 @@ local vQC_Tooltips = function(arg, frame)
 end
 
 function OpenQC()
-	if vQC_MFrame:IsVisible() then vQC_MFrame:Hide() else vQC_MFrame:Show() end
+	if vQC_MFrame:IsVisible() then
+		vQC_MFrame:Hide()
+	else
+		vQC_MFrame:Show()
+		if IsAddOnLoaded("AllTheThings") then 
+			vQC_QFrameIATT:Show()
+			vQC_MFrame:SetHeight(400)
+		else
+			vQC_QFrameIATT:Hide()
+			vQC_IFrame:Hide()
+			vQC_MFrame:SetHeight(186)
+			vQC_MFrame.B:SetSize(vQC_MFrame:GetWidth()-6,vQC_MFrame:GetHeight()-6)
+		end
+	end
 end
 
 local function CheckQuest()
 --GetQuestObjectives (Future, a tooltip)
-	local MInfo, TeTab = {}, {}
-	local Found = 1
 	if (_G.GetTitleForQuestID(vQC_QTBox:GetNumber()) ~= nil) then
 		if (select(1,_G.IsQuestFlaggedCompleted(vQC_QTBox:GetNumber()))) then
 			msg = "Quest is completed\n\n"
@@ -44,6 +55,8 @@ local function CheckQuest()
 	vQC_RFrame.T:SetText(msg)
 
 	if IsAddOnLoaded("AllTheThings") then
+		local MInfo, TeTab = {}, {}
+		local Found = 1
 		wipe(MInfo)
 		local questID,
 			q,
@@ -206,29 +219,15 @@ local vQC_IFrame = CreateFrame("Frame", "vQC_IFrame", vQC_MFrame, BackdropTempla
 -- OnEvent
 -------------------------------------------------------
 local vQC_OnUpdate = CreateFrame("Frame")
-	vQC_OnUpdate:RegisterEvent("ADDON_LOADED")
 	vQC_OnUpdate:RegisterEvent("PLAYER_LOGIN")
 	
 vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "PLAYER_LOGIN" then
-		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_Title.." v"..vQC_Version.." \/qc to open")
-		if IsAddOnLoaded("AllTheThings") then 
-			if vQC_MFrame:IsShown() then
-				vQC_QFrameIATT:Show()
-				vQC_MFrame:SetHeight(400)
-			end
-		else
-			vQC_QFrameIATT:Hide()
-			vQC_IFrame:Hide()
-			vQC_MFrame:SetHeight(186)
-			vQC_MFrame.B:SetSize(vQC_MFrame:GetWidth()-6,vQC_MFrame:GetHeight()-6)
-		end
-	end
-	if event == "ADDON_LOADED" then
+		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_Title.." v"..vQC_Version)
+		vQC_MFrame:Hide()
 		--do nothing
 	end
-end
-)
+end)
 
-SLASH_QC1, SLASH_QC2 = '/qc', '/qchecker';
+SLASH_QC1, SLASH_QC2 = '/qc', '/qchecker'
 SlashCmdList["QC"] = OpenQC
