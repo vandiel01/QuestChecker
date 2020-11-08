@@ -62,6 +62,7 @@ function QuestInfo(event)
 	end
 	if QuestFrame:IsVisible() then vQC_QWFrame:Show() vQC_WFrame:Hide() vQC_QWFrame.N:SetText(questID) end
 	if QuestMapFrame.DetailsFrame:IsVisible() then vQC_QWFrame:Hide() vQC_WFrame:Show() vQC_WFrame.N:SetText(questID) end
+	if vQC_MFrame:IsVisible() then vQC_QTBox:SetNumber(questID) CheckQuest() end
 	--print("QuestID: "..questID.." - Event Fired: "..event) --Debugging Purpose
 end
 
