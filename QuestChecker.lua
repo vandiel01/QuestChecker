@@ -20,10 +20,6 @@ local vQC_Tooltips = function(arg, frame)
 end
 
 function OpenQuestID(a)
-	if vQC_MFrame:IsVisible() and (QuestFrame:IsVisible() or QuestMapFrame:IsVisible()) then
-		vQC_MFrame:Hide()
-		return
-	end
 	vQC_MFrame:ClearAllPoints()
 	vQC_MFrame:Show()
 	vQC_QTBox:SetNumber(a)
@@ -60,9 +56,20 @@ function QuestInfo(event)
 		vQC_MFrame:Hide()
 		return
 	end
-	if QuestFrame:IsVisible() then vQC_QWFrame:Show() vQC_WFrame:Hide() vQC_QWFrame.N:SetText(questID) end
-	if QuestMapFrame.DetailsFrame:IsVisible() then vQC_QWFrame:Hide() vQC_WFrame:Show() vQC_WFrame.N:SetText(questID) end
-	if vQC_MFrame:IsVisible() then vQC_QTBox:SetNumber(questID) CheckQuest() end
+	if QuestFrame:IsVisible() then
+		vQC_QWFrame:Show()
+		vQC_WFrame:Hide()
+		vQC_QWFrame.N:SetText(questID)
+	end
+	if QuestMapFrame:IsVisible() then
+		vQC_QWFrame:Hide()
+		vQC_WFrame:Show()
+		vQC_WFrame.N:SetText(questID)
+	end
+	if vQC_MFrame:IsVisible() then
+		vQC_QTBox:SetNumber(questID)
+		CheckQuest()
+	end
 	--print("QuestID: "..questID.." - Event Fired: "..event) --Debugging Purpose
 end
 
