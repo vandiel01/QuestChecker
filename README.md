@@ -2,7 +2,7 @@
 'Quest Checker' is a World of Warcraft addon designed to check if you have/have not completed the quest'.  Bonus:  If you have ATT installed, you can see if you have completed it on another toon or not :)
 
 ## About Me
-I'm Vandiel, in ATT on Discord and on Korgath.  I'm by no means a expert programmer/coder, but like to learn and experiment things.  I'm always happy to have some insight and/or improvement to the code.
+I'm Vandiel, in ATT on Discord (Vandiel#2276) and on Korgath.  I'm by no means a expert programmer/coder, but like to learn and experiment things.  I'm always happy to have some insight and/or improvement to the code.
 
 ## Contribute
 Please report bugs on the [Github Issue Reporting] https://github.com/vandiel01/QuestChecker/issues/new.
