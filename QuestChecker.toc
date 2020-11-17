@@ -1,7 +1,7 @@
 ## Author: Vandiel
-## Interface: 90001
+## Interface: 90002
 ## Notes: Quest Checker
-## Title: .|TInterface\SPELLBOOK\Spellbook-Icon:0|t Quest Checker
+## Title: .|TInterface\GossipFrame\TrainerGossipIcon:0|t Quest Checker
 ## Version: 1.1
 ### No Saved Variables
 QuestChecker.lua
