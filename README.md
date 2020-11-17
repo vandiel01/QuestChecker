@@ -11,8 +11,8 @@ The use of [BugGrabber] https://www.curseforge.com/wow/addons/bug-grabber and [B
 
 You can also contribute to the addon by [Donate] https://paypal.me/Vandiel01
 
-## Use
-/qc to use 
+## How To Use
+/qc or /qchecker to use `Quest Checker`
 
 ## Image Samples
 ###### Normal Frame w/ AllTheThings Installed
