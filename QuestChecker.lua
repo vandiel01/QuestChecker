@@ -155,8 +155,8 @@ function ShowChainQuest()
 	local vQCSL, tSQC = {}, {}
 	local DidDone = "|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t"
 	local NotDone = "|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t"
-	local DidLook = "|TInterface\\COMMON\\Indicator-Green:16|t"
-	local NotLook = "|TInterface\\COMMON\\Indicator-Red:16|t"
+	local DidLook = "|TInterface\\COMMON\\Indicator-Green:14|t"
+	local NotLook = "|TInterface\\COMMON\\Indicator-Red:14|t"
 
 	wipe(vQCSL)	
 	vQCSL = QLine.GetQuestLineQuests(QLine.GetQuestLineInfo(vQC_QTBox:GetNumber(),QTask.GetQuestZoneID(vQC_QTBox:GetNumber())).questLineID)
@@ -178,6 +178,7 @@ end
 
 function CheckQuest()
 	local QNbr = vQC_QTBox:GetNumber() or 0
+	
 	if (QLog.GetTitleForQuestID(QNbr) ~= nil) then
 		YesNo = QLog.IsQuestFlaggedCompleted(QNbr) and "Quest Completed" or "Quest Not Completed"
 		for i = 1, #vQCHdr do
@@ -640,7 +641,7 @@ local vQC_MainFrame = CreateFrame("Frame", "vQC_MainFrame", UIParent, BackdropTe
 local vQC_OnUpdate = CreateFrame("Frame")
 vQC_OnUpdate:RegisterEvent("ADDON_LOADED")
 vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
-	--print("Event Fired: "..event) --Debugging Purpose
+	
 	if event == "ADDON_LOADED" then
 		local TheEvents = {
 			"QUEST_DETAIL", --1 selecting fresh quest
@@ -651,6 +652,8 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 			"QUEST_LOG_UPDATE", --opening questLog (cause QC to close)
 			"QUESTLINE_UPDATE", --opening questLog
 			"QUEST_PROGRESS", --ready to turn in quest
+			"QUEST_TURNED_IN", --update QC when quest turned in
+			"QUEST_COMPLETE", --update QC when quest turned in
 		}
 		for ev = 1, #TheEvents do
 			vQC_OnUpdate:RegisterEvent(TheEvents[ev])
@@ -667,6 +670,9 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		vQC_MiniWFrame:Hide()
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
+	if event == "QUEST_WATCH_LIST_CHANGED" then
+		CheckQuestAPI()
+	end
+	--print("Event Fired: "..event) --Debugging Purpose
 	QuestInfo(event)
-	--OpenQC()
 end)
