@@ -15,6 +15,12 @@ You can also contribute to the addon by [Donate] https://paypal.me/Vandiel01
 /qc or /qchecker to use `Quest Checker`
 
 ## Image Samples
+###### New
+![QCSample1](Images/NImage1.png)
+![QCSample1](Images/NImage2.png)
+![QCSample1](Images/NImage3.png)
+
+###### Old
 ###### Normal Frame w/ AllTheThings Installed
  ![QCSample1](Images/Image1.png)
 ###### Normal Frame w/ AllTheThings Installed
