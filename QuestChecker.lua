@@ -184,7 +184,7 @@ function CheckQuest()
 			vQCQue[i]:Show()
 		end
 		
---62157 and 43270 Good Nilable test reference
+--62157 and 43270 Good Nil-able test reference
 		local GQZID = QTask.GetQuestZoneID(QNbr)
 		if (GQZID == 0 or GQZID == nil) then GQZID = false else GQZID = QTask.GetQuestZoneID(QNbr) end
 		
