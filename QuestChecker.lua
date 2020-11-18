@@ -148,6 +148,7 @@ function CheckQuestAPI()
 		end)
 	end
 	CheckQuest()
+	vQC_QTBox:ClearFocus()
 end
 
 function ShowChainQuest()

@@ -16,10 +16,9 @@ You can also contribute to the addon by [Donate] https://paypal.me/Vandiel01
 
 ## Future Feature/Thoughts?
 	-Add option to open/close 'Have Chain'
-	-Tweak the List to make it clickable on 'Have Chain'
+	-Tweak the List to make it clickable on 'Have Chain' (with frame???)
 	-Add Abliity to see "StoryLines" that Bliz has hidden from us in API
 	-Add Ability to see ALL the quest that you have completed on THIS particular toon
-	-
 	-Any new reasonable ideas are welcome :)
 
 ## Image Samples
