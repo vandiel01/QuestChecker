@@ -63,8 +63,6 @@ local vQC_Tooltips = function(arg, frame)
 	if arg == "WHLink" then msg = "Click on this to create a link of QuestID for WoWHead" end
 	GameTooltip:AddLine(msg,1,1,1,1)
 	GameTooltip:Show()
-	
-	--vQC_QuestChain vQC_QuestWP WPoint QChain
 end
 
 local function OpenQuestID(a)
@@ -97,12 +95,7 @@ function QuestInfo(event)
 	if QuestMapFrame.DetailsFrame.questID ~= nil then
 		questID = QuestMapFrame.DetailsFrame.questID
 	end
-	if questID == 0 then
-	--	vQC_MiniQFrame:Hide()
-	--	vQC_MiniWFrame:Hide()
-	--	vQC_MainFrame:Hide()
-		return
-	end
+	if questID == 0 then return end
 	if QuestFrame:IsVisible() then
 		vQC_MiniQFrame:Show()
 		vQC_MiniWFrame:Hide()
@@ -117,18 +110,17 @@ function QuestInfo(event)
 		vQC_QTBox:SetNumber(questID)
 		CheckQuestAPI()
 	end
-	--print("QuestID: "..questID.." - Event Fired: "..event) --Debugging Purpose
 end
 
 function QuestUpDown(arg)
 	local QNbr = vQC_QTBox:GetNumber() or 0
 	if arg == 1 then 
 		QNbr = QNbr + 1
-		if QNbr >= 70000 then QNbr = 1 end --increment #
+		if QNbr >= 70000 then QNbr = 1 end
 	end
 	if arg == 0 then
 		QNbr = QNbr - 1
-		if QNbr <= 0 then QNbr = 70000 end --decrement #
+		if QNbr <= 0 then QNbr = 70000 end
 	end
 	if arg == 0 or arg == 1 then vQC_QTBox:SetNumber(QNbr) end
 	if vQC_WHLinkF:IsVisible() then
@@ -160,9 +152,10 @@ end
 
 function ShowChainQuest()
 	local vQCSL, tSQC = {}, {}
-	local RCR = "|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t"
-	local RCN = "|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t"
-	local RCA = "|TInterface\\COMMON\\Indicator-Green:16|t"
+	local DidDone = "|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t"
+	local NotDone = "|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t"
+	local DidLook = "|TInterface\\COMMON\\Indicator-Green:16|t"
+	local NotLook = "|TInterface\\COMMON\\Indicator-Red:16|t"
 
 	wipe(vQCSL)	
 	vQCSL = QLine.GetQuestLineQuests(QLine.GetQuestLineInfo(vQC_QTBox:GetNumber(),QTask.GetQuestZoneID(vQC_QTBox:GetNumber())).questLineID)
@@ -172,9 +165,10 @@ function ShowChainQuest()
 			tSQC = "API too slow, please try again by pressing 'Check'"
 			break
 		end
-		local tMsg = (vQCSL[i] == vQC_QTBox:GetNumber() and RCA or format("%02d",i)).." "..
-			(QLog.IsQuestFlaggedCompleted(vQCSL[i]) and RCR or RCN).." "..
-			vQCSL[i]..": "..QLog.GetTitleForQuestID(vQCSL[i])
+		local tMsg = (vQCSL[i] == vQC_QTBox:GetNumber() and (QLog.IsQuestFlaggedCompleted(vQCSL[i]) and DidLook or NotLook) or format("%02d",i)).." "..
+		(QLog.IsQuestFlaggedCompleted(vQCSL[i]) and DidDone or NotDone).." "..
+		vQCSL[i]..": "..QLog.GetTitleForQuestID(vQCSL[i])
+		
 		tinsert(tSQC,tMsg)
 	end
 	if type(tSQC) == "table" then tSQC = table.concat(tSQC,"\n") end
@@ -183,22 +177,17 @@ end
 
 function CheckQuest()
 	local QNbr = vQC_QTBox:GetNumber() or 0
-	
 	if (QLog.GetTitleForQuestID(QNbr) ~= nil) then
 		YesNo = QLog.IsQuestFlaggedCompleted(QNbr) and "Quest Completed" or "Quest Not Completed"
 		for i = 1, #vQCHdr do
 			vQCHdr[i]:Show()
 			vQCQue[i]:Show()
 		end
-
-		--Get Chain Quest ID then list the chains
-		--questLineID = C_QuestLine.GetQuestLineInfo(43270,C_TaskQuest.GetQuestZoneID(43270)).questLineID
-		--C_QuestLine.GetQuestLineQuests(questLineID)
-
-		--Workaround for Nil issues
+		
+--62157 and 43270 Good Nilable test reference
 		local GQZID = QTask.GetQuestZoneID(QNbr)
-		if GQZID == 0 then GQZID = nil else GQZID = QTask.GetQuestZoneID(QNbr) end
-
+		if (GQZID == 0 or GQZID == nil) then GQZID = false else GQZID = QTask.GetQuestZoneID(QNbr) end
+		
 		--Quest ID
 		vQCQT[1]:SetText(QNbr)
 		--Quest Name
@@ -216,32 +205,22 @@ function CheckQuest()
 		--Currently On Quest?
 		vQCQT[5]:SetText(QLog.IsOnQuest(QNbr) and "Yes" or "No")
 		--Is this Quest in any type of Storyline/Quest Chains?
-		if GQZID == nil then
-			vQCQT[6]:SetText("--")
-		else
-			vQCQT[6]:SetText(GQZID and "Yes |cffffff00["..QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).questLineName.."]|r" or "No")
-		end
-		if vQCQT[6]:GetText() == "No" then
-			vQC_QChains:Hide()
-			vQC_QuestChain:Hide()
-			vQC_QChains.T:SetText()
-		else
-			vQC_QChains:Show()
-			vQC_QuestChain:Show()
-			vQC_QChains.T:SetText("|cffffff00"..QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).questLineName.."|r")
-			ShowChainQuest()
-		end
+		vQCQT[6]:SetText(GQZID and "Yes |cffffff00["..QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).questLineName.."]|r" or "No")
+			if vQCQT[6]:GetText() == "No" then
+				vQC_QChains:Hide()
+				vQC_QuestChain:Hide()
+			else
+				vQC_QChains:Show()
+				vQC_QuestChain:Show()
+				vQC_QChains.T:SetText(GQZID and "|cffffff00"..QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).questLineName.."|r" or "--")
+				ShowChainQuest()
+			end
 		--Quest Coord, Subzone and Zone
-		if GQZID == nil then --Coord
-			vQCQT[7]:SetText("--")
-			vQCQT[8]:SetText("--")
-			vQCQT[9]:SetText("--")
-		else
-			vQCQT[7]:SetText(GQZID and string.format("%.2f",QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).x*100).." "..string.format("%.2f",QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).y*100) or "--") -- X,Y Coord
-			vQCQT[8]:SetText(GQZID and CMap.GetMapInfo(QTask.GetQuestZoneID(QNbr)).name or "--") --This Zone
-			vQCQT[9]:SetText(GQZID and CMap.GetMapInfo(CMap.GetMapInfo(QTask.GetQuestZoneID(QNbr)).parentMapID).name or "--") --Parent Zone
-		end
-		if vQCQT[7]:GetText() == "--" then vQC_QuestWP:Hide() else vQC_QuestWP:Show() end
+		vQCQT[7]:SetText(GQZID and string.format("%.2f",QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).x*100).." "..string.format("%.2f",QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).y*100) or "--") -- X,Y Coord
+			if vQCQT[7]:GetText() == "--" then vQC_QuestWP:Hide() else vQC_QuestWP:Show() end
+		vQCQT[8]:SetText(GQZID and CMap.GetMapInfo(QTask.GetQuestZoneID(QNbr)).name or "--") --This Zone
+		vQCQT[9]:SetText(GQZID and CMap.GetMapInfo(CMap.GetMapInfo(QTask.GetQuestZoneID(QNbr)).parentMapID).name or "--") --Parent Zone
+		
 		--Is Quest Repeatable?
 		vQCQT[10]:SetText(QLog.IsRepeatableQuest(QNbr) and "Yes" or "No")
 		--Is Quest Daily?
@@ -252,7 +231,6 @@ function CheckQuest()
 			vQCQue[i]:Hide()
 		end
 		vQC_QChains:Hide()
-		vQC_QChains.T:SetText("")
 		YesNo = "\n Quest ID #|cffffff00"..QNbr.."|r"..
 		"\n\n |TInterface\\HELPFRAME\\HelpIcon-ReportAbuse:26|t Never existed/removed, |TInterface\\HELPFRAME\\HelpIcon-ReportAbuse:26|t"..
 		"\n |TInterface\\Store\\category-icon-placeholder:40|t Rare/Hidden Trigger, |TInterface\\Store\\category-icon-placeholder:40|t"..
@@ -329,9 +307,6 @@ function FixString(Str)
 		end
 	end
 	return "|cffffff00"..Str..":|r"
-end
-function DoNothing()
-	--Do Nothing
 end
 
 ------------------------------------------------------------------------
@@ -570,8 +545,8 @@ local vQC_MainFrame = CreateFrame("Frame", "vQC_MainFrame", UIParent, BackdropTe
 			vQC_QChains.B:SetSize(vQC_QChains:GetWidth()-10,vQC_QChains:GetHeight()-10)
 			vQC_QChains.B:SetPoint("CENTER", vQC_QChains, 0, 0)
 			vQC_QChains.B:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background-Azerite")
-			vQC_QChains.T = vQC_ATTInfo:CreateFontString("T")
-			vQC_QChains.T:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+			vQC_QChains.T = vQC_QChains:CreateFontString("T")
+			vQC_QChains.T:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
 			vQC_QChains.T:SetPoint("TOP", vQC_QChains, 0, -10)
 			vQC_QChains.T:SetText("")
 		local vQC_QChainS = CreateFrame("ScrollFrame", "vQC_QChainS", vQC_QChains, "UIPanelScrollFrameTemplate")
@@ -587,6 +562,10 @@ local vQC_MainFrame = CreateFrame("Frame", "vQC_MainFrame", UIParent, BackdropTe
 				vQC_QCArea:SetText("")
 			vQC_QChainS:SetScrollChild(vQC_QCArea)
 		vQC_QChains:Hide()
+			local vQC_QChainsX = CreateFrame("Button", "vQC_QChainsX", vQC_QChains, "UIPanelCloseButton")
+				vQC_QChainsX:SetSize(32,32)
+				vQC_QChainsX:SetPoint("TOPRIGHT", vQC_QChains, 0, 0)
+				vQC_QChainsX:SetScript("OnClick", function() vQC_QChains:Hide() end)
 
 ------------------------------------------------------------------------
 -- Build Other Frame/Misc
@@ -600,7 +579,6 @@ local vQC_MainFrame = CreateFrame("Frame", "vQC_MainFrame", UIParent, BackdropTe
 			vQC_QuestWP:SetScript("OnClick", function() vQC_Tooltips(2) end)
 			vQC_QuestWP:SetScript("OnEnter", function() vQC_Tooltips("WPoint",vQC_QuestWP) end)
 			vQC_QuestWP:SetScript("OnLeave", function() vQC_Tooltips(0) end)
-			--vQC_QuestWP:Hide()
 			
 		--MiniIcon for Have Chain
 		local vQC_QuestChain = CreateFrame("Button", "vQC_QuestChain", vQC_Query6)
@@ -608,9 +586,9 @@ local vQC_MainFrame = CreateFrame("Frame", "vQC_MainFrame", UIParent, BackdropTe
 			vQC_QuestChain:SetNormalTexture("Interface\\RAIDFRAME\\UI-RAIDFRAME-ARROW")
 			vQC_QuestChain:ClearAllPoints()
 			vQC_QuestChain:SetPoint("RIGHT", vQC_Query6, -4, 0)
+			vQC_QuestChain:SetScript("OnClick", function() if vQC_QChains:IsVisible() then vQC_QChains:Hide() else vQC_QChains:Show() end end)
 			vQC_QuestChain:SetScript("OnEnter", function() vQC_Tooltips("QChain",vQC_QuestChain) end)
 			vQC_QuestChain:SetScript("OnLeave", function() vQC_Tooltips(0) end)
-			--vQC_QuestWP:Hide()
 
 		--For WoWHead
 		local vQC_WHLinkIcon = CreateFrame("Button", "vQC_WHLinkIcon", vQC_ResultFrame)
