@@ -7,7 +7,7 @@ local QTask = _G["C_TaskQuest"]
 local CMap = _G["C_Map"]
 local vQCHdr, vQCQue, vQCHT, vQCQT =  {}, {}, {}, {}
 local QHeader = { "ID", "Name", "Level", "Objectives", "On_QuestQQ", "Have_ChainQQ", "Coord", "Zone", "Subzone", "DailyQQ", "World_QuestQQ", }
-local TestNbr = 43270 --Priest Legendary Chain from BSI
+--local TestNbr = 43270 --Priest Legendary Chain from BSI
 --"43341" --Uniting the Isle, popular BSI Starting Quest (Debugging Purpose)
 local TmpHeight = 410
 
@@ -216,7 +216,11 @@ function CheckQuest()
 		--Currently On Quest?
 		vQCQT[5]:SetText(QLog.IsOnQuest(QNbr) and "Yes" or "No")
 		--Is this Quest in any type of Storyline/Quest Chains?
-		vQCQT[6]:SetText(GQZID and "Yes |cffffff00["..QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).questLineName.."]|r" or "No")
+		if GQZID == nil then
+			vQCQT[6]:SetText("--")
+		else
+			vQCQT[6]:SetText(GQZID and "Yes |cffffff00["..QLine.GetQuestLineInfo(QNbr,QTask.GetQuestZoneID(QNbr)).questLineName.."]|r" or "No")
+		end
 		if vQCQT[6]:GetText() == "No" then
 			vQC_QChains:Hide()
 			vQC_QuestChain:Hide()
