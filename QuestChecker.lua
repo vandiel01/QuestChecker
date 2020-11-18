@@ -642,18 +642,19 @@ local vQC_OnUpdate = CreateFrame("Frame")
 vQC_OnUpdate:RegisterEvent("ADDON_LOADED")
 vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	
+--More Test is needed on what events are needed but this is what i can tell so far is working as intended
 	if event == "ADDON_LOADED" then
 		local TheEvents = {
 			"QUEST_DETAIL", --1 selecting fresh quest
-			"GOSSIP_CLOSED", --2 doesnt do much, basically gossip until quest selected
 			"QUEST_FINISHED", --3 when closing the quest/accept quest
-			"QUEST_DATA_LOAD_RESULT", --updates when quest log is viewed
 			"QUEST_WATCH_LIST_CHANGED", --Minor when accept quest
 			"QUEST_LOG_UPDATE", --opening questLog (cause QC to close)
-			"QUESTLINE_UPDATE", --opening questLog
 			"QUEST_PROGRESS", --ready to turn in quest
 			"QUEST_TURNED_IN", --update QC when quest turned in
 			"QUEST_COMPLETE", --update QC when quest turned in
+		--	"QUEST_DATA_LOAD_RESULT", --updates when quest log is viewed		
+		--	"GOSSIP_CLOSED", --2 doesnt do much, basically gossip until quest selected
+		--	"QUESTLINE_UPDATE", --opening questLog
 		}
 		for ev = 1, #TheEvents do
 			vQC_OnUpdate:RegisterEvent(TheEvents[ev])
