@@ -1,0 +1,10 @@
+------------------------------------------------------------------------
+-- Area to Focus/Fix/Feature Soon
+------------------------------------------------------------------------
+-- Remove Check Button since you can press Enter to Query.
+-- Remove "Quest ID Wording? (Move it into Text Box until focus and word removes)?
+-- Add Yellow !, Blue !, Gold !, Epic, Rare, Elite... if the quest is a daily
+-- Create an "Book of Storyline" with additonal of "Not Started, Partial Done, Completed
+-- List a World Boss Quickly and Add Immediately to Quest Watch List (??)
+-- Fix the current Storyline crappy method where the row is neater and able to click to acquire more information
+------------------------------------------------------------------------
