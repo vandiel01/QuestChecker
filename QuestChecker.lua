@@ -4,8 +4,10 @@
                         --- WOWHead Icon [Thanks to WOWHead] ---
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
-
 local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
+------------------------------------------------------------------------
+-- Globals (I Hope)
+------------------------------------------------------------------------
 -- Globals
 	local QLog = _G["C_QuestLog"]
 	local QLine = _G["C_QuestLine"]
@@ -19,18 +21,16 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 		"|TInterface\\COMMON\\Indicator-Red:14|t", -- Not Selected
 		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", -- In Progress
 	}
--- General Variables
-local CP, Re, TopRow, BotRow = 0, 0, 0, 0
-local mapID, StoryID
-local TmpHeight = 250
-
+-- Locals
+	local CP, Re, TopRow, BotRow = 0, 0, 0, 0
+	local mapID, StoryID
+	local TmpHeight = 250
 ------------------------------------------------------------------------
 -- Debugging Only
 ------------------------------------------------------------------------
 -- local rQT = {11,33816,33815,34379,33468,32783,32989,37291,34563,34087,34685,34558,43341,43270}
 -- local TestNbr = rQT[math.random(#rQT)]
 -- local TestNbr = math.random(70000)
-
 ------------------------------------------------------------------------
 -- Table of Frame Backdrops
 ------------------------------------------------------------------------
@@ -58,7 +58,7 @@ local ATTIconBkgnd = {
 	insets = { left = 2, right = 2, top = 2, bottom = 2 }
 }
 ------------------------------------------------------------------------
--- Query for QuestLog ID/Title, Bliz too slow to call via API
+-- Open/Close Main Window Before Doing Anything else
 ------------------------------------------------------------------------
 function OpenQC()
 	if vQC_Main:IsVisible() then
@@ -75,10 +75,7 @@ end
 ------------------------------------------------------------------------
 -- Independent Query
 ------------------------------------------------------------------------
-function CheckQuestAPI(a)
-	if a == 1 and QuestFrame:IsVisible() then vQC_QuestID:SetNumber(vQC_MiniQ.Text:GetText()) end
-	if a == 1 and QuestMapFrame.DetailsFrame:IsVisible() then vQC_QuestID:SetNumber(vQC_MiniW.Text:GetText()) end
-
+function CheckQuestAPI()
 	vQC_NoResultsFound:Hide()
 	vQC_YesResultsFound:Hide()
 	vQC_StoryMain:Hide()	
@@ -140,6 +137,9 @@ function QueryQuestAPI()
 	end
 	-- Query AllTheThings SavedVariables
 	Status = xpcall(ATTQueryVariables(), err)
+	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
+		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
+	end
 	vQC_QuestID:ClearFocus()
 end
 ------------------------------------------------------------------------
@@ -191,7 +191,7 @@ function GetQuestLineID()
 	return
 end
 ------------------------------------------------------------------------
--- Query the Storyline
+-- Query the Storyline (Need to Fix into Neater Column)
 ------------------------------------------------------------------------
 function ShowChainQuest()
 	if not vQC_StoryMain:IsVisible() then
@@ -316,7 +316,7 @@ function QuestUpDown(arg)
 		if QNbr == -1 then QNbr = 70000 end
 	end
 	vQC_QuestID:SetNumber(QNbr)
-	if vQC_WHLinkBox:IsVisible() then
+	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
 		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
 	end
 	CheckQuestAPI()
@@ -343,7 +343,11 @@ end
 ------------------------------------------------------------------------
 -- WOWHead Link Display
 ------------------------------------------------------------------------
-local function WHLink()
+ local function WHLink()
+	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
+		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
+		return
+	end
 	if vQC_WHLinkBox:IsVisible() then
 		vQC_WHLinkBox:Hide()
 	else
@@ -378,17 +382,18 @@ end
 ------------------------------------------------------------------------
 -- Frequent Updates via Event Watcher 'QUEST_WATCH_LIST_CHANGED'
 ------------------------------------------------------------------------
-function WatchQuestLogActivity(event)
+function WatchQLogAct(event)
 	local questID = GetQuestID()
 	if QuestMapFrame.DetailsFrame.questID ~= nil then questID = QuestMapFrame.DetailsFrame.questID end
 	if questID == 0 then return end
 	
+	if event == 1 and not vQC_Main:IsVisible() then vQC_Main:Show() end
 	if QuestFrame:IsVisible() then
 		vQC_MiniQ:Show()
 		vQC_MiniW:Hide()
 		vQC_MiniQ.Text:SetText(questID)
 	end
-	if QuestMapFrame:IsVisible() then
+	if QuestMapFrame.DetailsFrame:IsVisible() then
 		vQC_MiniQ:Hide()
 		vQC_MiniW:Show()
 		vQC_MiniW.Text:SetText(questID)
@@ -456,7 +461,7 @@ end
 				vQC_QFIcon:SetSize(16,16)
 				vQC_QFIcon:SetNormalTexture("Interface\\GossipFrame\\CampaignAvailableQuestIcon")
 				vQC_QFIcon:SetPoint("RIGHT", vQC_MiniQ, -5, 0)
-				vQC_QFIcon:SetScript("OnClick", function() CheckQuestAPI(1) end)
+				vQC_QFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
 				vQC_QFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniQ) end)
 				vQC_QFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 	local vQC_MiniW = CreateFrame("Frame", "vQC_MiniW", QuestMapFrame.DetailsFrame, BackdropTemplateMixin and "BackdropTemplate")
@@ -472,7 +477,7 @@ end
 				vQC_WFIcon:SetSize(16,16)
 				vQC_WFIcon:SetNormalTexture("Interface\\GossipFrame\\CampaignAvailableQuestIcon")
 				vQC_WFIcon:SetPoint("RIGHT", vQC_MiniW, -5, 0)
-				vQC_WFIcon:SetScript("OnClick", function() CheckQuestAPI(1) end)
+				vQC_WFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
 				vQC_WFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniW) end)
 				vQC_WFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 ------------------------------------------------------------------------
@@ -812,11 +817,11 @@ end
 			vQC_WHLinkIcon.Icon:SetSize(50,50)
 			vQC_WHLinkIcon.Icon:SetPoint("CENTER", vQC_WHLinkIcon, 0, 0)
 			vQC_WHLinkIcon.Icon:SetTexture("Interface\\Addons\\QuestChecker\\Images\\ATTImages")
-			vQC_WHLinkIcon.Icon:SetTexCoord(384/512, 448/512, 0/64, 64/64)
+			vQC_WHLinkIcon.Icon:SetTexCoord(0.75, 0, 0.75, 1, 0.875, 0, 0.875, 1)
 	-- Show Link Box	
 	local vQC_WHLinkBox = CreateFrame("Frame", "vQC_WHLinkBox", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_WHLinkBox:SetBackdrop(Backdrop_B)
-		vQC_WHLinkBox:SetSize(200,33)
+		vQC_WHLinkBox:SetSize(220,33)
 		vQC_WHLinkBox:SetPoint("TOPRIGHT", vQC_Main, 0, 31)
 		local vQC_WHLinkTxt = CreateFrame("EditBox", "vQC_WHLinkTxt", vQC_WHLinkBox, "InputBoxTemplate")
 			vQC_WHLinkTxt:SetSize(vQC_WHLinkBox:GetWidth()-20,19)
@@ -916,5 +921,5 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		CheckQuestAPI()
 	end
 	-- print("Event Fired: "..event) --Debugging Purpose
-	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQuestLogActivity(event) end
+	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
 end)
