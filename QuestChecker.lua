@@ -157,17 +157,22 @@ function GetQuestLineID()
 		if StoryID then
 			-- Show Storyline Window
 			vQC_StoryMain:Show()
+			
 			-- Make a Title for the Storyline Window
 			vQC_StoryTitle.Text:SetText("|cffffff00"..StoryID.questLineName.."|r")
+			
 			-- Make an Text of Storyline
 			vQC_T_St.Text:SetText("|cffffff00"..StoryID.questLineName.." |r")
+			
 			-- Mark an X,Y Coord
 			vQC_T_XY.Text:SetText(mapID and string.format("%.1f",StoryID.x*100).." "..string.format("%.1f",StoryID.y*100) or "---")
-			if vQC_T_XY.Text:GetText() == "---" then vQC_MapPinIcon:Hide() else vQC_MapPinIcon:Show() end
+			
 			-- Show Subzone Name
 			vQC_T_SZ.Text:SetText(mapID and CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).name or "---")
+			
 			-- Show Zone Name
 			vQC_T_MZ.Text:SetText(mapID and CMap.GetMapInfo(CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID).name or "---")
+			
 			-- Check/Pull Storyline if any
 			Status = xpcall(ShowChainQuest(), err)
 		else
@@ -183,8 +188,11 @@ function GetQuestLineID()
 		vQC_StoryTitle.Text:SetText("|cffffff00---|r")
 		vQC_T_St.Text:SetText("---")
 		vQC_T_XY.Text:SetText("---")
+		vQC_T_SZ.Text:SetText("---")
+		vQC_T_MZ.Text:SetText("---")
 		vQC_SLText:SetText("")
 	end
+	if vQC_T_XY.Text:GetText() == "---" then vQC_MapPinIcon:Hide() else vQC_MapPinIcon:Show() end
 	vQC_Quest_Anim.AG:Stop()
 	vQC_Quest_Anim:Hide()
 	Re = 0
@@ -917,9 +925,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		WatchMemoryCount()
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
-	if event == "QUEST_WATCH_LIST_CHANGED" and vQC_Main:IsVisible() then
-		CheckQuestAPI()
-	end
+	if event == "QUEST_WATCH_LIST_CHANGED" and vQC_Main:IsVisible() then CheckQuestAPI() end
 	-- print("Event Fired: "..event) --Debugging Purpose
 	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
 end)
