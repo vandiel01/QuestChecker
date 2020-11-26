@@ -1,10 +1,25 @@
 ------------------------------------------------------------------------
 -- Area to Focus/Fix/Feature Soon
 ------------------------------------------------------------------------
--- Remove Check Button since you can press Enter to Query.
--- Remove "Quest ID Wording? (Move it into Text Box until focus and word removes)?
 -- Add Yellow !, Blue !, Gold !, Epic, Rare, Elite... if the quest is a daily
--- Create an "Book of Storyline" with additonal of "Not Started, Partial Done, Completed
 -- List a World Boss Quickly and Add Immediately to Quest Watch List (??)
 -- Fix the current Storyline crappy method where the row is neater and able to click to acquire more information
 ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+-- Partial Fixed But Not Done
+------------------------------------------------------------------------
+-- Fixed the current Storyline crappy method but need to fix rows to be able to click to acquire more info
+
+------------------------------------------------------------------------
+-- Completed
+------------------------------------------------------------------------
+-- Remove Check Button since you can press Enter to Query.
+-- Remove "Quest ID" since its all about QuestLog Query
+
+
+
+------------------------------------------------------------------------
+-- Very Complicated, Soon in Future whenever Bliz ever Fix all their Storyline IDs
+------------------------------------------------------------------------
+-- Create an "Book of Storyline" with additonal of "Not Started, Partial Done, Completed
