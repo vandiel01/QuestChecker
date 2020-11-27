@@ -329,16 +329,16 @@ local function WatchMemoryCount()
 	C_Timer.After(30, WatchMemoryCount)
 	local QC_Mem = GetAddOnMemoryUsage("QuestChecker")
 
-	if QC_Mem < 200 then vQC_Title.MemIcon:Hide() else vQC_Title.MemIcon:Show() end
+	if QC_Mem < 200 then vQC_Quest.MemIcon:Hide() else vQC_Quest.MemIcon:Show() end
 	
-	if QC_Mem > 2048 then vQC_Title.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Red") end
-	if QC_Mem < 2048 and QC_Mem > 1024 then vQC_Title.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Yellow") end
-	if QC_Mem < 1024 and QC_Mem > 201 then vQC_Title.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Green") end
+	if QC_Mem > 2048 then vQC_Quest.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Red") end
+	if QC_Mem < 2048 and QC_Mem > 1024 then vQC_Quest.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Yellow") end
+	if QC_Mem < 1024 and QC_Mem > 201 then vQC_Quest.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Green") end
 
 	if QC_Mem > 2700 and not InCombatLockdown() then
 		print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2).." (|cff00ff00Dumping Mem: "..(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, "mb") or format("%.0f%s", QC_Mem, "kb")).."|r)")
 		collectgarbage("collect")
-		vQC_Title.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Green")
+		vQC_Quest.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Green")
 	end
 end
 ------------------------------------------------------------------------
@@ -548,11 +548,6 @@ end
 			vQC_Title.IconB:SetSize(64,64)
 			vQC_Title.IconB:SetPoint("TOPLEFT", vQC_Title, 25, 35)
 			vQC_Title.IconB:SetTexture("Interface\\TutorialFrame\\UI-TutorialFrame-QuestComplete")
-			vQC_Title.MemIcon = vQC_Title:CreateTexture(nil, "ARTWORK")
-			vQC_Title.MemIcon:SetSize(24,24)
-			vQC_Title.MemIcon:SetPoint("LEFT", vQC_Title, 60, -1)
-			vQC_Title.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Green")
-			vQC_Title.MemIcon:Hide()
 			vQC_Title.Text = vQC_Title:CreateFontString("T")
 			vQC_Title.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Title, "OUTLINE")
 			vQC_Title.Text:SetPoint("CENTER", vQC_Title)
@@ -567,6 +562,11 @@ end
 		vQC_Quest:SetSize(vQC_Main:GetWidth()-5,33)
 		vQC_Quest:ClearAllPoints()
 		vQC_Quest:SetPoint("TOP", vQC_Title, 0, 0-vQC_Title:GetHeight()+3)
+			vQC_Quest.MemIcon = vQC_Quest:CreateTexture(nil, "ARTWORK")
+			vQC_Quest.MemIcon:SetSize(24,24)
+			vQC_Quest.MemIcon:SetPoint("LEFT", vQC_Quest, 60, -1)
+			vQC_Quest.MemIcon:SetTexture("Interface\\COMMON\\Indicator-Green")
+			vQC_Quest.MemIcon:Hide()
 		local vQC_QuestID = CreateFrame("EditBox", "vQC_QuestID", vQC_Quest, "InputBoxTemplate")
 			vQC_QuestID:SetPoint("CENTER", vQC_Quest, "CENTER", 0, 0)
 			vQC_QuestID:SetSize(70,20)
