@@ -23,7 +23,7 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", -- In Progress
 	}
 -- Locals
-	local CP, Re, TopRow, BotRow = 0, 0, 0, 0
+	local CP, Re, TopRow, BotRow = 1, 0, 0, 0
 	local mapID, StoryID, QC_Mem
 -- Local Font Size
 	local F_Title = 14		--Title Font Size
@@ -31,7 +31,7 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 	local F_Sm_Title = 12	--Small Header Font Size
 	local F_Body = 10		--Body/Normal Text Font Size
 	-- Temp Number To Allow me to Change in future for "Resizing Window"
-	local TmpHeight = 210	--Main Frame Height (One Influences All)
+	local TmpHeight = 200	--Main Frame Height (One Influences All)
 	local TmpWidth = 300	--Main Frame Width (One Influences All)
 	local tHei = 7			--Gaps Between Title/Results
 	local tRWi = 65			--Width of the Header (Temp)
@@ -276,7 +276,7 @@ function ShowChainQuest()
 	CP = CP + 1
 	if type(tSQC) == "table" then tSQC = table.concat(tSQC,"\n") end
 	vQC_SLText:SetText(tSQC)
-	if strfind(vQC_SLText:GetText(),"Querying Data...") and CP < 5 then
+	if strfind(vQC_SLText:GetText(),"Querying Data...") and CP < 6 then
 		vQC_ShowChainQuest_Timer = C_Timer.NewTimer(2, ShowChainQuest)
 		vQC_Story_Anim.Text:SetText("|cffc8c864"..CP.."|r")
 		return
@@ -557,7 +557,7 @@ end
 -- Main Title
 	local vQC_Title = CreateFrame("Frame", "vQC_Title", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_Title:SetBackdrop(Backdrop_B)
-		vQC_Title:SetSize(vQC_Main:GetWidth()-5,32)
+		vQC_Title:SetSize(vQC_Main:GetWidth()-5,24)
 		vQC_Title:ClearAllPoints()
 		vQC_Title:SetPoint("TOP", vQC_Main, 0, -3)
 			vQC_Title.IconA = vQC_Title:CreateTexture(nil, "ARTWORK")
@@ -573,12 +573,12 @@ end
 			vQC_Title.Text:SetPoint("CENTER", vQC_Title)
 			vQC_Title.Text:SetText(vQC_AppTitle)
 			local vQC_TitleX = CreateFrame("Button", "vQC_TitleX", vQC_Title, "UIPanelCloseButton")
-				vQC_TitleX:SetSize(32,32)
+				vQC_TitleX:SetSize(26,26)
 				vQC_TitleX:SetPoint("RIGHT", vQC_Title, 0, 0)
 				vQC_TitleX:SetScript("OnClick", function() vQC_Main:Hide() end)
 -- Main Quest Input
 	local vQC_Quest = CreateFrame("Frame", "vQC_Quest", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
-		vQC_Quest:SetBackdrop(Backdrop_B)
+		--vQC_Quest:SetBackdrop(Backdrop_B)
 		vQC_Quest:SetSize(vQC_Main:GetWidth()-5,33)
 		vQC_Quest:ClearAllPoints()
 		vQC_Quest:SetPoint("TOP", vQC_Title, 0, 0-vQC_Title:GetHeight()+3)
@@ -773,7 +773,7 @@ end
 -- Storyline Title
 	local vQC_StoryTitle = CreateFrame("Frame", "vQC_StoryTitle", vQC_StoryMain, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_StoryTitle:SetBackdrop(Backdrop_B)
-		vQC_StoryTitle:SetSize(vQC_StoryMain:GetWidth()-5,26)
+		vQC_StoryTitle:SetSize(vQC_StoryMain:GetWidth()-5,24)
 		vQC_StoryTitle:ClearAllPoints()
 		vQC_StoryTitle:SetPoint("TOP", vQC_StoryMain, 0, -3)
 			vQC_StoryTitle.Text = vQC_StoryTitle:CreateFontString("T")
@@ -786,7 +786,7 @@ end
 		vQC_SLResult:ClearAllPoints()
 		vQC_SLResult:SetPoint("TOP", vQC_StoryTitle, 0, 0-vQC_StoryTitle:GetHeight()+3)
 			local vQC_SLScroll = CreateFrame("ScrollFrame", "vQC_SLScroll", vQC_SLResult, "UIPanelScrollFrameTemplate")
-				vQC_SLScroll:SetSize(vQC_SLResult:GetWidth()-30,vQC_SLResult:GetHeight()-8)
+				vQC_SLScroll:SetSize(vQC_SLResult:GetWidth()-30,vQC_SLResult:GetHeight()-5)
 				vQC_SLScroll:SetPoint("TOPLEFT", vQC_SLResult, 5, -5)
 					vQC_SLText = CreateFrame("EditBox", "vQC_SLText", vQC_SLScroll)
 					vQC_SLText:SetWidth(vQC_StoryMain:GetWidth()-25)
@@ -813,22 +813,22 @@ end
 -- ATT Title
 	local vQC_ATTTitle = CreateFrame("Frame", "vQC_ATTTitle", vQC_ATTMain, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_ATTTitle:SetBackdrop(Backdrop_B)
-		vQC_ATTTitle:SetSize(vQC_ATTMain:GetWidth()-6,30)
+		vQC_ATTTitle:SetSize(vQC_ATTMain:GetWidth()-6,24)
 		vQC_ATTTitle:ClearAllPoints()
 		vQC_ATTTitle:SetPoint("TOP", vQC_ATTMain, 0, -3)
 			vQC_ATTTitle.Text = vQC_ATTTitle:CreateFontString("T")
 			vQC_ATTTitle.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
-			vQC_ATTTitle.Text:SetPoint("CENTER", vQC_ATTTitle, 0, 0)
+			vQC_ATTTitle.Text:SetPoint("CENTER", vQC_ATTTitle, 0, 1)
 			vQC_ATTTitle.Text:SetText("|cffffff00Completed By|r")
 -- ATT Icon
 	local vQC_ATTIconBG = CreateFrame("Frame", "vQC_ATTIconBG", vQC_ATTTitle, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_ATTIconBG:SetBackdrop(ATTIconBkgnd)
 		vQC_ATTIconBG:SetBackdropColor(math.random(), math.random(), math.random(), 1)
-		vQC_ATTIconBG:SetSize(45,39)
+		vQC_ATTIconBG:SetSize(38,32)
 		vQC_ATTIconBG:ClearAllPoints()
-		vQC_ATTIconBG:SetPoint("TOPLEFT", vQC_ATTTitle, -20, 20)
+		vQC_ATTIconBG:SetPoint("TOPLEFT", vQC_ATTTitle, -16, 16)
 			vQC_ATTTitle.Icon = vQC_ATTIconBG:CreateTexture(nil, "ARTWORK")
-			vQC_ATTTitle.Icon:SetSize(48,48)
+			vQC_ATTTitle.Icon:SetSize(42,42)
 			vQC_ATTTitle.Icon:SetPoint("CENTER", vQC_ATTIconBG, "CENTER", -1, 3)
 			vQC_ATTTitle.Icon:SetTexture("Interface\\Addons\\QuestChecker\\Images\\ATTImages")
 			vQC_ATTTitle.Icon:SetTexCoord(0.625, 0, 0.625, 1, 0.75, 0, 0.75, 1)
