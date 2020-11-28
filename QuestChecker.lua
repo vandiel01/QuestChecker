@@ -7,14 +7,12 @@
 -------------------------------------------------------------------------------------------------------
 local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
 ------------------------------------------------------------------------
--- Globals (I Hope)
+-- Variables
 ------------------------------------------------------------------------
--- Globals
 	local QLog = _G["C_QuestLog"]
 	local QLine = _G["C_QuestLine"]
 	local QTask = _G["C_TaskQuest"]
 	local CMap = _G["C_Map"]
--- Reuse Icons
 	local ReuseIcons = {
 		"|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t",  --Did Done
 		"|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t",  --Not Done
@@ -22,34 +20,30 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 		"|TInterface\\COMMON\\Indicator-Red:14|t", -- Not Selected
 		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", -- In Progress
 	}
--- Locals
 	local CP, Re, TopRow, BotRow = 1, 0, 0, 0
-	local mapID, StoryID, QC_Mem
--- Local Font Size
+	local mapID, StoryID, QC_Mem = 0, 0, 0
+-- Local Font Size (for Frames)
 	local F_Title = 14		--Title Font Size
 	local F_Header = 14		--Header Font Size
 	local F_Sm_Title = 12	--Small Header Font Size
 	local F_Body = 10		--Body/Normal Text Font Size
-	
 	-- Temp Number To Allow me to Change in future for "Resizing Window"
 	local TmpHeight = 200	--Main Frame Height (One Influences All)
 	local TmpWidth = 300	--Main Frame Width (One Influences All)
 	local tHei = 7			--Gaps Between Title/Results
 	local tRWi = 65			--Width of the Header (Temp)
-	
 	-- Temp Solution Until I make a SavedVariable for this
 	local LeftRightATT = "RIGHT" --(use either LEFT or RIGHT) for position left or right of the Main Window
+
 ------------------------------------------------------------------------
 -- Debugging Only
 ------------------------------------------------------------------------
--- local rQT = {11,33816,33815,34379,33468,32783,32989,37291,34563,34087,34685,34558,43341,43270}
--- local TestNbr = rQT[math.random(#rQT)]
--- local TestNbr = math.random(70000)
+-- DEBUG if needed
 	local DEBUG = false
-	local DebugOut = function(str)
+	local DeOutput = function(str)
 		for _,name in pairs(CHAT_FRAMES) do
 		   local frame = _G[name]
-		   if frame.name == "DEBUGWindow" then
+		   if frame.name == "DEBUGWindow" then -- You Need DEBUGWindow (ChatFrame) to view debugs
 				frame:AddMessage(date("%H:%M.%S").." "..str)
 		   end
 		end
@@ -81,68 +75,70 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 		insets = { left = 2, right = 2, top = 2, bottom = 2 }
 	}
 ------------------------------------------------------------------------
--- Capturing ToolTips (Soon.. Need to Find Solution to Capturing Tooltips for Quick Search)
-------------------------------------------------------------------------
---[[
-function vQC_ToolTips(self)
-	if DEBUG then DebugOut("vQC_ToolTips") end
-	if IsAddOnLoaded("AllTheThings") and vQC_Main:IsVisible() and IsControlKeyDown() then
-		local lines = self:NumLines()
-		if lines ~= nil then
-			for i = 1, lines do
-				local txtL = getglobal(self:GetName() .. "TextLeft" .. i)
-				if txtL:GetText() ~= nil then
-					if txtL:GetText() == "Quest ID" then
-						local txtR = getglobal(self:GetName() .. "TextRight" .. i)
-						print("Found Quest ID# "..txtR:GetText())
-					end
-				end
-			end
-		end
-	end
-end
-]]--
-------------------------------------------------------------------------
 -- Toggle Buttons To Prevent Multiple Query Loop
 ------------------------------------------------------------------------
 function ToggleInputs(arg)
-	if DEBUG then DebugOut("ToggleInputs") end
+	if DEBUG then DeOutput("ToggleInputs") end
 	if arg == 0 then
 		vQC_QuestID:Disable()
 		vQC_QID_Dec:Disable()
 		vQC_QID_Inc:Disable()
 		vQC_QuestID_Query:Disable()
-		vQC_DebugIcon:Disable()
+		if DEBUG then vQC_DebugIcon:Disable() end
 	end
 	if arg == 1 then
 		vQC_QuestID:Enable()
 		vQC_QID_Dec:Enable()
 		vQC_QID_Inc:Enable()
 		vQC_QuestID_Query:Enable()
-		vQC_DebugIcon:Enable()
+		if DEBUG then vQC_DebugIcon:Enable() end
 	end
 end
 ------------------------------------------------------------------------
--- Open/Close Main Window Before Doing Anything else
+-- Frequent Updates via Event Watcher 'QUEST_WATCH_LIST_CHANGED'/Opens Addon
 ------------------------------------------------------------------------
-function OpenQC(a)
-	if DEBUG then DebugOut("OpenQC") end
-	if vQC_Main:IsVisible() then
-		vQC_Main:Hide()
-	else
-		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
-		vQC_Main:Show()
-		-- Keep For Holiday Modification Later
-		-- TopRow = math.random(0,5)*64
-		-- vQC_ATTTitle.Icon:SetTexCoord(TopRow/512, (TopRow+64)/512, 0/64, 64/64)
+function WatchQLogAct(arg)
+	if DEBUG then DeOutput("WatchQLogAct") end
+	if arg == 0 then
+		if vQC_QuestID:GetNumber() == 0 then
+			vQC_NoResultsFound:Hide()
+			vQC_YesResultsFound:Hide()
+		end
+		if vQC_Main:IsVisible() then
+			vQC_Main:Hide()
+		else
+			if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
+			vQC_Main:Show()
+			-- Keep For Holiday Modification Later
+			-- TopRow = math.random(0,5)*64
+			-- vQC_ATTTitle.Icon:SetTexCoord(TopRow/512, (TopRow+64)/512, 0/64, 64/64)
+		end
+		return
 	end
-	CheckQuestAPI()
+	
+	local questID = GetQuestID()
+	if QuestMapFrame.DetailsFrame.questID ~= nil then questID = QuestMapFrame.DetailsFrame.questID end
+	if questID == 0 then return end
+	if QuestFrame:IsVisible() then
+		vQC_MiniQ:Show()
+		vQC_MiniW:Hide()
+		vQC_MiniQ.Text:SetText(questID)
+	end
+	if QuestMapFrame.DetailsFrame:IsVisible() then
+		vQC_MiniQ:Hide()
+		vQC_MiniW:Show()
+		vQC_MiniW.Text:SetText(questID)
+	end
+	if vQC_Main:IsVisible() then
+		vQC_QuestID:SetNumber(questID)
+		CheckQuestAPI()
+	end
 end
 ------------------------------------------------------------------------
 -- Independent Query
 ------------------------------------------------------------------------
 function CheckQuestAPI()
-	if DEBUG then DebugOut("CheckQuestAPI") end
+	if DEBUG then DeOutput("CheckQuestAPI") end
 	vQC_NoResultsFound:Hide()
 	vQC_YesResultsFound:Hide()
 	vQC_StoryMain:Hide()	
@@ -165,7 +161,7 @@ end
 -- Query for QuestLog ID/Title, Bliz too slow to call via API
 ------------------------------------------------------------------------
 function QueryQuestAPI()
-	if DEBUG then DebugOut("QueryQuestAPI") end
+	if DEBUG then DeOutput("QueryQuestAPI") end
 	if (QLog.GetTitleForQuestID(vQC_QuestID:GetNumber()) ~= nil) then
 		if (QLog.IsOnQuest(vQC_QuestID:GetNumber())) then
 			vQC_ResultHeader.Text:SetText(ReuseIcons[5].." |cffc8c864Quest In Progress|r")
@@ -204,7 +200,7 @@ end
 -- Query from GetQuestZoneID, GetQuestLineInfo & GetMapInfo
 ------------------------------------------------------------------------
 function GetQuestLineID()
-	if DEBUG then DebugOut("GetQuestLineID") end
+	if DEBUG then DeOutput("GetQuestLineID") end
 	vQC_Quest_Anim:Show()
 	vQC_Quest_Anim.AG:Play()
 	if Re == 0 then mapID = QTask.GetQuestZoneID(vQC_QuestID:GetNumber()) end
@@ -223,8 +219,8 @@ function GetQuestLineID()
 			vQC_T_XY.Text:SetText(mapID and string.format("%.1f",StoryID.x*100).." "..string.format("%.1f",StoryID.y*100) or "---")
 			-- Show Subzone Name
 			vQC_T_SZ.Text:SetText(mapID and CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).name or "---")
-			-- Show Zone Name
-			vQC_T_MZ.Text:SetText(mapID and CMap.GetMapInfo(CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID).name or "---")
+			-- Show Zone Name (59931 has sub, no parent)
+			vQC_T_MZ.Text:SetText(mapID and (CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID ~= 0 and CMap.GetMapInfo(CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID).name) or "---")
 			-- Check/Pull Storyline if any
 			Status = xpcall(ShowChainQuest(), err)
 		else
@@ -253,7 +249,7 @@ end
 -- Query the Storyline (Need to Fix into Neater Column)
 ------------------------------------------------------------------------
 function ShowChainQuest()
-	if DEBUG then DebugOut("ShowChainQuest Start"..CP, vQC_ShowChainQuest_Timer) end
+	if DEBUG then DeOutput("ShowChainQuest Start"..CP, vQC_ShowChainQuest_Timer) end
 	if not vQC_StoryMain:IsVisible() then
 		GetQuestLineID()
 		return
@@ -291,13 +287,14 @@ function ShowChainQuest()
 	CP = 0
 	vQC_Story_Anim.AG:Stop()
 	vQC_Story_Anim:Hide()
-	if DEBUG then DebugOut("ShowChainQuest End"..CP, vQC_ShowChainQuest_Timer) end
+	Status = xpcall(WatchMemoryCount(), err) --Clean up After Storyline Query
+	if DEBUG then DeOutput("ShowChainQuest End"..CP, vQC_ShowChainQuest_Timer) end
 end
 ------------------------------------------------------------------------
 -- Query Information from AllTheThings SavedVariables
 ------------------------------------------------------------------------
 function ATTQueryVariables()
-	if DEBUG then DebugOut("ATTQueryVariables") end
+	if DEBUG then DeOutput("ATTQueryVariables") end
 	if IsAddOnLoaded("AllTheThings") then
 		local MInfo, TeTab, tMInfo = {}, {}, {}
 		local Found = 1
@@ -343,10 +340,10 @@ end
 ------------------------------------------------------------------------
 -- Memory Check/Indicator and Dump if needed (Quest Query can be.... annoying)
 ------------------------------------------------------------------------
-local function WatchMemoryCount()
-	if DEBUG then DebugOut("WatchMemoryCount", QC_Mem) end
-	C_Timer.After(30, WatchMemoryCount)
+function WatchMemoryCount()
+	if DEBUG then DeOutput("WatchMemoryCount", QC_Mem) end
 	QC_Mem = GetAddOnMemoryUsage("QuestChecker")
+	--C_Timer.After(30, WatchMemoryCount)
 	if QC_Mem < 150 then vQC_Quest_MemIcon:Hide() else vQC_Quest_MemIcon:Show() end
 	if QC_Mem > 1024 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Red") end
 	if QC_Mem < 1024 and QC_Mem > 512 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Yellow") end
@@ -361,18 +358,19 @@ end
 -- Game ToolTip Simplified
 ------------------------------------------------------------------------
 function ToolTipsOnly(f)
-	if DEBUG then DebugOut("ToolTipsOnly", QC_Mem) end
-	GameTooltip:Hide()
+	--if DEBUG then DeOutput("ToolTipsOnly", QC_Mem) end
 	GameTooltip:ClearLines()
+	GameTooltip:Hide()
 	if f == 0 then return end
-	GameTooltip:SetOwner(f, "ANCHOR_CURSOR")
-	
+	if vQC_Main:GetCenter() > (UIParent:GetWidth() / 2) then
+		GameTooltip:SetOwner(f, "ANCHOR_LEFT")
+	else
+		GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
+	end
 	if f == vQC_MiniMap then msg = vQC_AppTitle end
-	if f == vQC_MiniQ or f == vQC_MiniW then msg = "Quest ID\n\nClick here to check if other character has completed this quest." end
-	if f == vQC_MapPinIcon then msg = "Click here to create an coords on Map" end
-	if f == vQC_WHLinkIcon then msg = "Click on this to create a link of QuestID for WoWHead" end
+	if f == vQC_MiniQ or f == vQC_MiniW then msg = "Quest ID\n\nCheck the Quest." end
+	if f == vQC_MapPinIcon then msg = "Pin the Map" end
 	if f == vQC_Quest_MemIcon then msg = "Current: |cff00ff00"..(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb")).."|r" end
-
 	GameTooltip:AddLine(msg,1,1,1,1)
 	GameTooltip:Show()
 end
@@ -380,7 +378,7 @@ end
 -- Increment/Decrement the Value
 ------------------------------------------------------------------------
 function QuestUpDown(arg)
-	if DEBUG then DebugOut("QuestUpDown") end
+	if DEBUG then DeOutput("QuestUpDown") end
 	local QNbr = vQC_QuestID:GetNumber()
 	if arg == 1 then 
 		QNbr = QNbr + 1
@@ -400,7 +398,7 @@ end
 -- WOWHead Link Display
 ------------------------------------------------------------------------
  local function WHLink()
- 	if DEBUG then DebugOut("WHLink") end
+ 	if DEBUG then DeOutput("WHLink") end
 	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
 		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
 		return
@@ -416,7 +414,7 @@ end
 -- Make an Map Pin or TomTom (if exist)
 ------------------------------------------------------------------------
 local function MakePins()
-	if DEBUG then DebugOut("MakePins") end
+	if DEBUG then DeOutput("MakePins") end
 	if vQC_MapPinIcon:IsVisible() then
 		if IsAddOnLoaded("TomTom") then
 			TomTom:AddWaypoint(
@@ -438,32 +436,6 @@ local function MakePins()
 	end
 end
 ------------------------------------------------------------------------
--- Frequent Updates via Event Watcher 'QUEST_WATCH_LIST_CHANGED'
-------------------------------------------------------------------------
-function WatchQLogAct(event)
-	if DEBUG then DebugOut("WatchQLogAct") end
-	local questID = GetQuestID()
-	if QuestMapFrame.DetailsFrame.questID ~= nil then questID = QuestMapFrame.DetailsFrame.questID end
-	if questID == 0 then return end
-	
-	if event == 1 and not vQC_Main:IsVisible() then vQC_Main:Show() end
-	
-	if QuestFrame:IsVisible() then
-		vQC_MiniQ:Show()
-		vQC_MiniW:Hide()
-		vQC_MiniQ.Text:SetText(questID)
-	end
-	if QuestMapFrame.DetailsFrame:IsVisible() then
-		vQC_MiniQ:Hide()
-		vQC_MiniW:Show()
-		vQC_MiniW.Text:SetText(questID)
-	end
-	if vQC_Main:IsVisible() then
-		vQC_QuestID:SetNumber(questID)
-		CheckQuestAPI()
-	end
-end
-------------------------------------------------------------------------
 -- Mini Map Position when Dragging
 ------------------------------------------------------------------------
 local myIconPos = 0
@@ -480,7 +452,7 @@ end
 -- Nothing here, right?
 ------------------------------------------------------------------------
 function DoNothing()
-	if DEBUG then DebugOut("DoNothing") end
+	if DEBUG then DeOutput("DoNothing") end
 	--I mean, it's obvious isn't it?
 end
 ------------------------------------------------------------------------
@@ -494,7 +466,7 @@ end
 		vQC_MiniMap:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -10, 0)
 		vQC_MiniMap:SetMovable(true)
 		vQC_MiniMap:RegisterForDrag("LeftButton")
-			vQC_MiniMap:SetScript("OnClick", function() OpenQC() end)
+			vQC_MiniMap:SetScript("OnClick", function() WatchQLogAct(0) end)
 			vQC_MiniMap:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniMap) end)
 			vQC_MiniMap:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 			vQC_MiniMap:SetScript("OnDragStart", function()
@@ -522,7 +494,7 @@ end
 				vQC_QFIcon:SetSize(16,16)
 				vQC_QFIcon:SetNormalTexture("Interface\\GossipFrame\\CampaignAvailableQuestIcon")
 				vQC_QFIcon:SetPoint("RIGHT", vQC_MiniQ, -5, 0)
-				vQC_QFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
+				vQC_QFIcon:SetScript("OnClick", function() WatchQLogAct() end)
 				vQC_QFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniQ) end)
 				vQC_QFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 	local vQC_MiniW = CreateFrame("Frame", "vQC_MiniW", QuestMapFrame.DetailsFrame, BackdropTemplateMixin and "BackdropTemplate")
@@ -538,7 +510,7 @@ end
 				vQC_WFIcon:SetSize(16,16)
 				vQC_WFIcon:SetNormalTexture("Interface\\GossipFrame\\CampaignAvailableQuestIcon")
 				vQC_WFIcon:SetPoint("RIGHT", vQC_MiniW, -5, 0)
-				vQC_WFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
+				vQC_WFIcon:SetScript("OnClick", function() WatchQLogAct() end)
 				vQC_WFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniW) end)
 				vQC_WFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 ------------------------------------------------------------------------
@@ -598,7 +570,7 @@ end
 			vQC_QuestID:SetAutoFocus(false)
 			vQC_QuestID:SetMultiLine(false)
 			vQC_QuestID:SetNumeric(true)
-			vQC_QuestID:SetNumber(TestNbr or 0)
+			vQC_QuestID:SetNumber(0)
 			vQC_QuestID:SetScript("OnEnterPressed", function() CheckQuestAPI() end)
 		local vQC_QID_Dec = CreateFrame("Button", "vQC_QID_Dec", vQC_Quest)
 			vQC_QID_Dec:SetSize(22,22)
@@ -615,7 +587,6 @@ end
 			vQC_QuestID_Query:SetPoint("RIGHT", vQC_QID_Inc, 25, 0)
 			vQC_QuestID_Query:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\None")
 			vQC_QuestID_Query:SetScript("OnClick", function() CheckQuestAPI() end)
-			
 -- Main Quest Results Header (Progress, None, Done, Not Done)
 	local vQC_ResultHeader = CreateFrame("Frame", "vQC_ResultHeader", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_ResultHeader:SetSize(vQC_Main:GetWidth()-5,30)
@@ -880,8 +851,6 @@ end
 		vQC_WHLinkIcon:ClearAllPoints()
 		vQC_WHLinkIcon:SetPoint("TOPLEFT", vQC_Quest, 5, -5)
 		vQC_WHLinkIcon:SetScript("OnClick", function() WHLink() end)
-		vQC_WHLinkIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_WHLinkIcon) end)
-		vQC_WHLinkIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 	-- Show Link Box	
 	local vQC_WHLinkBox = CreateFrame("Frame", "vQC_WHLinkBox", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_WHLinkBox:SetBackdrop(Backdrop_B)
@@ -936,20 +905,21 @@ end
 ------------------------------------------------------------------------
 -- Debug Quest # Randomonizer
 ------------------------------------------------------------------------
-local vQC_DebugIcon = CreateFrame("Button", "vQC_DebugIcon", vQC_ATTTitle)
-	vQC_DebugIcon:SetSize(24, 24)
-	vQC_DebugIcon:SetNormalTexture("Interface\\GLUES\\CharacterSelect\\CharacterUndelete")
-	vQC_DebugIcon:ClearAllPoints()
-		if LeftRightATT == "LEFT" then
-			vQC_DebugIcon:SetPoint("RIGHT", vQC_ATTTitle, 0, 0)
-		elseif LeftRightATT == "RIGHT" then
-			vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
-		end
-	vQC_DebugIcon:SetScript("OnClick", function()
-		vQC_QuestID:SetNumber(math.random(70000))
-		CheckQuestAPI()
-	end)
-	-- vQC_DebugIcon:Hide()
+if DEBUG then
+	local vQC_DebugIcon = CreateFrame("Button", "vQC_DebugIcon", vQC_ATTTitle)
+		vQC_DebugIcon:SetSize(24, 24)
+		vQC_DebugIcon:SetNormalTexture("Interface\\GLUES\\CharacterSelect\\CharacterUndelete")
+		vQC_DebugIcon:ClearAllPoints()
+			if LeftRightATT == "LEFT" then
+				vQC_DebugIcon:SetPoint("RIGHT", vQC_ATTTitle, 0, 0)
+			elseif LeftRightATT == "RIGHT" then
+				vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
+			end
+		vQC_DebugIcon:SetScript("OnClick", function()
+			vQC_QuestID:SetNumber(math.random(70000))
+			CheckQuestAPI()
+		end)
+end
 ------------------------------------------------------------------------
 -- Fire Up Events
 ------------------------------------------------------------------------
@@ -961,7 +931,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		local TheEvents = {
 			"QUEST_DETAIL", --1 selecting fresh quest
 			"QUEST_FINISHED", --3 when closing the quest/accept quest
-			"QUEST_WATCH_LIST_CHANGED", --Minor when accept quest
+	--		"QUEST_WATCH_LIST_CHANGED", --Minor when accept quest
 			"QUEST_LOG_UPDATE", --opening questLog (cause QC to close)
 			"QUEST_PROGRESS", --ready to turn in quest
 			"QUEST_TURNED_IN", --update QC when quest turned in
@@ -976,18 +946,13 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle)
 		SLASH_QC1, SLASH_QC2 = '/qc', '/qchecker'
-		SlashCmdList["QC"] = OpenQC
+		SlashCmdList["QC"] = WatchQLogAct(0)
 		vQC_Main:Hide()
 		vQC_StoryMain:Hide()
 		vQC_MiniQ:Hide()
 		vQC_MiniW:Hide()
-		WatchMemoryCount()
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
-	
-	if event == "QUEST_WATCH_LIST_CHANGED" and vQC_Main:IsVisible() then CheckQuestAPI() end
-	-- print("Event Fired: "..event) --Debugging Purpose
 	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
+	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
 end)
---GameTooltip:HookScript("OnShow", vQC_ToolTips)
---GameTooltip:HookScript("OnTooltipSetQuest", vQC_ToolTips)
