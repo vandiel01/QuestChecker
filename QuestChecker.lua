@@ -263,6 +263,7 @@ function ShowChainQuest()
 	vQCSL = QLine.GetQuestLineQuests(QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).questLineID)
 	for i = 1, #vQCSL do
 		local DidQuest = (QLog.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])
+		
 		local NbrsSeq = i
 
 		local QuestID = vQCSL[i]
@@ -271,9 +272,9 @@ function ShowChainQuest()
 				QuestID = QuestID..Spa
 			end
 
-		local QuestNa = (QLog.GetTitleForQuestID(vQCSL[i]) == nil and "|cffFF1100Querying Data...|r" or (vQCSL[i] == vQC_QuestID:GetNumber() and "|cff00FF00"..QLog.GetTitleForQuestID(vQCSL[i]).."|r") or "|cffFFFFFF"..QLog.GetTitleForQuestID(vQCSL[i]).."|r")
+		local QuestNa = (QLog.GetTitleForQuestID(vQCSL[i]) == nil and "|cffFF1100Querying Data..." or (vQCSL[i] == vQC_QuestID:GetNumber() and "|cff00FF00"..QLog.GetTitleForQuestID(vQCSL[i])) or "|cffFFFFFF"..QLog.GetTitleForQuestID(vQCSL[i])).."|r"
 		
-		if string.len(string.sub(QuestNa, 11, -3)) >= 31 then QuestNa = QuestNa:sub(0,39).."..." end
+		if string.len(string.sub(QuestNa, 11, -3)) >= 31 then QuestNa = QuestNa:sub(0,39).."...|r" end
 		
 		tMsg = string.format("%s %03d %-7s %s",DidQuest,NbrsSeq,QuestID,QuestNa)
 		tinsert(tSQC,tMsg)
