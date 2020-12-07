@@ -2,7 +2,7 @@
 ## Interface: 90002
 ## Notes: Quest Checker
 ## Title: .|TInterface\GossipFrame\TrainerGossipIcon:0|t Quest Checker
-## Version: 2.1
+## Version: 2.2
 ### No Saved Variables
 
 QuestChecker.lua

@@ -1,53 +1,45 @@
-﻿local Revision = "11282020_191300" --Ignore, its for my Debugging Purpose :)
+﻿local Revision = "12062020_195300" --Ignore, its for my Debugging Purpose :)
 ----------------------------------------------------------------------------------------------------
                         --- AllTheThings Icon [Thanks to Crieve\Dylan] ---
                   --- AllTheThings Holiday Icon [Thanks to Dead Serious] ---
                         --- WOWHead Icon [Thanks to WOWHead] ---
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
-local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
+local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
 ------------------------------------------------------------------------
--- Variables
+-- API Variables
 ------------------------------------------------------------------------
-	local QLog = _G["C_QuestLog"]
-	local QLine = _G["C_QuestLine"]
-	local QTask = _G["C_TaskQuest"]
-	local CMap = _G["C_Map"]
+	local vC_QLogs = _G["C_QuestLog"]
+	local vC_QLine = _G["C_QuestLine"]
+	local vC_QTask = _G["C_TaskQuest"]
+	local vC_CMaps = _G["C_Map"]
+	local vC_GTips = _G["GameTooltip"]
+	local vC_EncJo = _G["C_EncounterJournal"]
+	local vC_CDaTi = _G["C_DateAndTime"]
+------------------------------------------------------------------------
+-- Table of Reuseable Icons
+------------------------------------------------------------------------
 	local ReuseIcons = {
 		"|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t",  --Did Done
 		"|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t",  --Not Done
 		"|TInterface\\COMMON\\Indicator-Green:14|t",  -- Selected
 		"|TInterface\\COMMON\\Indicator-Red:14|t", -- Not Selected
 		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", -- In Progress
+		"|TInterface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked:18|t", --MapPin
+		"|TInterface\\COMMON\\icon-noloot:18|t", --No Loot Bag
 	}
-	local CP, Re, TopRow, BotRow = 1, 0, 0, 0
-	local mapID, StoryID, QC_Mem = 0, 0, 0
--- Local Font Size (for Frames)
-	local F_Title = 14		--Title Font Size
-	local F_Header = 14		--Header Font Size
-	local F_Sm_Title = 12	--Small Header Font Size
-	local F_Body = 10		--Body/Normal Text Font Size
-	-- Temp Number To Allow me to Change in future for "Resizing Window"
-	local TmpHeight = 183	--Main Frame Height (One Influences All)
-	local TmpWidth = 300	--Main Frame Width (One Influences All)
-	local tHei = 7			--Gaps Between Title/Results
-	local tRWi = 65			--Width of the Header (Temp)
-	-- Temp Solution Until I make a SavedVariable for this
-	local LeftRightATT = "RIGHT" --(use either LEFT or RIGHT) for ATT Window position left or right of the Main Window
-
 ------------------------------------------------------------------------
--- Debugging Only
+-- List of Fonts To Use (Might be more)
 ------------------------------------------------------------------------
--- DEBUG if needed
-	local DEBUG = false
-	local DeOutput = function(str)
-		for _,name in pairs(CHAT_FRAMES) do
-		   local frame = _G[name]
-		   if frame.name == "DEBUGWindow" then -- You Need DEBUGWindow (ChatFrame) to view debugs
-				frame:AddMessage(date("%H:%M.%S").." "..str)
-		   end
-		end
-	end
+	-- You can add your own style of Font to the list, but only ONE will be used.
+	-- Find any instance of FontStyle[x] in the code and change to what you want accordingly
+	local FontStyle = {
+		"Fonts\\FRIZQT__.TTF",
+		"Fonts\\ARIALN.ttf",
+		"Fonts\\MORPHEUS.ttf",
+		"Fonts\\FRIENDS.ttf",
+		"Fonts\\skurri.ttf",
+	}
 ------------------------------------------------------------------------
 -- Table of Frame Backdrops
 ------------------------------------------------------------------------
@@ -67,7 +59,14 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 		edgeSize = 16,
 		insets = { left = 4, right = 4, top = 4, bottom = 4 }
 	}
-	local ATTIconBkgnd = {
+	local Backdrop_NBgnd = {
+		edgeFile = "Interface\\ToolTips\\UI-Tooltip-Border",
+		tileEdge = true,
+		tileSize = 16,
+		edgeSize = 16,
+		insets = { left = 4, right = 4, top = 4, bottom = 4 }
+	}
+	local Backdrop_NBdr = {
 		bgFile = "Interface\\CHATFRAME\\CHATFRAMEBACKGROUND",
 		tileEdge = true,
 		tileSize = 16,
@@ -75,23 +74,261 @@ local vQC_AppTitle = "|cffffff00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 		insets = { left = 2, right = 2, top = 2, bottom = 2 }
 	}
 ------------------------------------------------------------------------
--- Toggle Buttons To Prevent Multiple Query Loop
+-- Table of Frame Backdrops
+------------------------------------------------------------------------	
+	local CP, Re, TopRow, BotRow, GQL = 1, 0, 0, 0, 0
+	local mapID, StoryID, QC_Mem = 0, 0, 0
+-- Local Font Size (for Frames)
+	local Font_Lg = 14		--Large Font Size
+	local Font_Md = 12		--Medium Font Size
+	local Font_Sm = 10		--Small/Normal Font Size
+-- Temp Number To Allow me to Change in future for "Resizing Window"
+	local TmpHeight = 183	--Main Frame Height (One Influences All)
+	local TmpWidth = 300	--Main Frame Width (One Influences All)
+	local tHei = 7			--Gaps Between Title/Results
+	local tRWi = 65			--Width of the Header (Temp)
+-- Temp Solution Until I make a SavedVariable for this
+	local LeftRightATT = "RIGHT" --(use either LEFT or RIGHT) for ATT Window position left or right of the Main Window
+-- Random Image Bkgnd for World Boss Zone Title
 ------------------------------------------------------------------------
-function ToggleInputs(arg)
-	if DEBUG then DeOutput("ToggleInputs") end
-	if arg == 0 then
-		vQC_QuestID:Disable()
-		vQC_QID_Dec:Disable()
-		vQC_QID_Inc:Disable()
-		vQC_QuestID_Query:Disable()
-		if DEBUG then vQC_DebugIcon:Disable() end
+-- World Boss Settings
+------------------------------------------------------------------------
+	local WBMainBG = { "DeathKnightFrost", "DemonHunter", "Druid", "Hunter", "MageArcane", "Monk", "Paladin", "Priest", "PriestShadow", "Rogue", "Shaman", "Warlock", 	"Warrior", } -- Change Background when World Boss Screen is Opened
+	local WhatExpac = { "Mists of Pandaria", "Warlords of Dreanor", "Legion", "Battle of Azeroth", "Shadowlands", "","","","","", "Broken Isles (Legion)", "Argus (Legion)", "Nazjatar (BfA)", "Warfront: Arathi Highlands (BfA)", "Warfront: Darkshore (BfA)", "N'Zoth: Uldum (BfA)", "N'Zoth: Vale of Eternal Blossoms (BfA)" }
+	local WorldBossList = {
+	--Mist of Pandaria	
+		{ 32518, 1, 35, 814, "Nalak", "Nalak, The Storm Lord", 504, .60, .377, },	--1
+		{ 32519, 1, 35, 826, "Oondasta", "Oondasta", 507, .499, .568, },	--2
+		{ 33118, 1, 35, 861, "Ordos", "Ordos, Fire-God of the Yaungol", 504, .60, .377, },	--3
+		{ 32098, 1, 35, 725, "Chief Salyis", "Salyis's Warband", 376, .707, .635, },	--4
+		{ 32099, 1, 35, 691, "SHA OF ANGER", "Sha of Anger", 379, .535, .652, },	--5
+		{ 33117, 1, 35, 857, "Chi Ji", "The Four Celestials", 554, .388, .552, },	--6
+	--Warlord of Dreanor
+		{ 37460, 2, 40, 1291, "Drov the Ruiner", "Drov the Ruiner", 543, .441, .399, },	--7
+		{ 37464, 2, 40, 1262, "Rukhmar", "Rukhmar", 542, .37, .393, },	--8
+		{ 39380, 2, 40, 1452, "SupremeLordKazzak", "Supreme Lord Kazzak", 534, .475, .221, },	--9
+		{ 37462, 2, 40, 1211, "Tarlna The Ancient", "Tarlna the Ageless", 543, .47, .867, },	--10
+	--Legion
+		{ 43512, 3, 45, 1790, "Ana-Mouz", "Ana-Mouz", 680, .31, .655, },	--11
+		{ 43193, 3, 45, 1774, "Calamir", "Calamir", 630, .377, .836, },	--12
+		{ 43448, 3, 45, 1789, "Drugon the Frostblood", "Drugon the Frostblood", 650, .584, .726, },	--13
+		{ 43985, 3, 45, 1795, "Flotsam", "Flotsam", 650, .492, .76, },	--14
+		{ 42819, 3, 45, 1770, "Humongris", "Humongris", 641, .246, .696, },	--15
+		{ 43192, 3, 45, 1769, "Levantus", "Levantus", 630, .43, .676, },	--16
+		{ 43513, 3, 45, 1783, "Nazak the Fiend", "Na'zak the Fiend", 685, .36, .664, },	--17
+		{ 42270, 3, 45, 1749, "Nithogg", "Nithogg", 634, .466, .30, },	--18
+		{ 42779, 3, 45, 1763, "Sharthos", "Shar'thos", 641, .556, .432, },	--19
+		{ 42269, 3, 45, 1756, "The Soultakers", "The Soultakers", 634, .782, .86, },	--20
+		{ 44287, 3, 45, 1796, "Withered Jim", "Withered Jim", 630, .526, .808, },	--21
+			--Broken Isles
+		{ 47061, 11, 45, 1956, "FelReaver", "Apocron", 646, .592, .626, },	--22
+		{ 46947, 11, 45, 1883, "Brutallus", "Brutallus", 646, .592, .284, },	--23
+		{ 46948, 11, 45, 1884, "Malificus", "Malificus", 646, .598, .278, },	--24
+		{ 46945, 11, 45, 1885, "Sivash", "Si'vash", 646, .896, .33, },	--25
+			--Argus
+		{ 49166, 12, 45, 2012, "InquisitorMeto", "Inquisitor Meto", 0, 0, 0, },	--26
+		{ 49169, 12, 45, 2010, "MatronFolnuna", "Matron Folnuna", 0, 0, 0, },	--27
+		{ 49167, 12, 45, 2011, "MistressAlluradel", "Mistress Alluradel", 0, 0, 0, },	--28
+		{ 49170, 12, 45, 2013, "Occularus", "Occularus", 0, 0, 0, },	--29
+		{ 49171, 12, 45, 2014, "Sotanathor", "Sotanathor", 0, 0, 0, },	--30
+	--Battle of Azeroth
+		{ 52163, 4, 50, 2199, "AzurethosTheWingedTyphoon", "Azurethos, The Winged Typhoon", 895, .62, .24, },	--31
+		{ 52196, 4, 50, 2210, "DunegorgerKraulok", "Dunegorger Kraulok", 864, .443, .555, },	--32
+		{ 52157, 4, 50, 2197, "HailstoneConstruct", "Hailstone Construct", 896, .492, .746, },	--33
+		{ 52169, 4, 50, 2141, "Jiarak", "Ji'arak", 862, .69, .31, },	--34
+		{ 52181, 4, 50, 2139, "Tzane", "T'zane", 863, .356, .336, },	--35
+		{ 52166, 4, 50, 2198, "WarbringerYenajz", "Warbringer Yenajz", 942, .832, .496, },	--36
+			--Nazjatar
+		{ 56057, 13, 50, 2362, "Ulmath", "Ulmaththe Soulbinder", 1355, .842, .359, },	--37
+		{ 56056, 13, 50, 2363, "Wekemara", "Wekemara", 1355, .428, .779, },	--38
+			--Warfront: Arathi Highlands
+		{ 52847, 14, 50, 2213, "DoomsHowl", "Doom's Howl", 14, .378, .402, },	--39
+		{ 52847, 14, 50, 2213, "TheLionsRoar", "The Lion's Roar", 14, .355, .389, },	--40
+			--Warfront: Darkshore
+		{ 54895, 15, 50, 2345, "Ivus-the-Decayed", "Ivus the Decayed", 62, .414, .359, },	--41
+		{ 54895, 15, 50, 2329, "Ivus-the-Forest-Lord", "Ivus the Forest Lord", 62, .414, .359, },	--42
+			--Vale of Eternal Blossoms
+		{ 58705, 16, 50, 2378, "Grand Empress Shekzeer", "Grand Empress Shek'zara", 1530, .59, .564, },	--43
+			--Uldum
+		{ 55466, 17, 50, 2381, "Vuklaz", "Vuk'laz the Earthbreaker", 1527, .457, .161, },	--44
+	--Shadowlands
+		{ 99999, 5, 60, 2431, "Mortanis", "Mortanis", 0, 0, 0, },	--45
+		{ 99999, 5, 60, 2433, "NurgashMuckformed", "Nurgash Muckformed", 0, 0, 0, },	--46
+		{ 61815, 5, 60, 2432, "Oranomonos", "Oranomonos the Everbranching", 0, 0, 0, },	--47
+		{ 61813, 5, 60, 2430, "Valinor", "Valinor, the Light of Eons", 0, 0, 0, },	--48
+	} --Will need Zone, Coord, Bonus Roll ID, Quest on 2 more...
+------------------------------------------------------------------------
+-- World Boss Checker
+------------------------------------------------------------------------
+function WorldBossCheck()
+	if DEBUG then DeOutput("WorldBossCheck") end
+	if vQC_WBMain:IsVisible() then vQC_WBMain:Hide() return else vQC_WBMain:Show() end
+	
+	vQC_WBTitle.Icon:SetTexture("Interface\\ENCOUNTERJOURNAL\\UI-EJ-BOSS-"..WorldBossList[math.random(#WorldBossList)][5])
+	vQC_WBMain.Bkgnd:SetTexture("Interface\\Artifacts\\ArtifactUI"..WBMainBG[math.random(#WBMainBG)])
+
+	-- Shorthand the _Gs
+	local isQFC = vC_QLogs.IsQuestFlaggedCompleted
+	local isTim = vC_QTask.GetQuestTimeLeftSeconds
+	local isAdd = vC_QLogs.AddWorldQuestWatch
+	local PLv = UnitLevel("player")
+	local PHA = string.sub(select(2,UnitFactionGroup("player")),1,1)
+	
+--Still in Air....
+--Maybe Detect Invasion/Warfront Timer?
+--Legion Az 1187, Val 1188, HM 1189, St 1190
+--BfA Zul 1193, Naz 1194, Vol 1195, TriS 1196, Dru 1197, StV 1198
+--Darkshore 1203
+--Arathi Highlands ???
+
+	local TimerDash = false
+	local TableRowCount = 0
+	local HdrPos = -24
+	for i = #WorldBossList, 1, -1 do
+		-- Assign Variable to Table/Array Index(?) cuz I'm not gonna change [i][x] every freaking time, new data is added to Array :P
+		local WBQu = WorldBossList[i][1] 	-- World Boss Quest ID
+		local WBEx = WorldBossList[i][2]	-- Which Expansion Name
+		local WBLv = WorldBossList[i][3] 	-- Minimium Level To See
+		local WBEJ = WorldBossList[i][4] 	-- EncounterJournal ID
+		local WBIm = WorldBossList[i][5] 	-- Image File Name
+		local WBNa = WorldBossList[i][6] 	-- World Boss Actual Name
+		local WBZo = WorldBossList[i][7] 	-- World Boss Zone ID
+		local WBXc = WorldBossList[i][8] 	-- World Boss X ID
+		local WBYc = WorldBossList[i][9] 	-- World Boss Y ID
+		
+		--Initialize Pull List
+		local ExBool = (WBEx == 1 or WBEx == 2) and true or false
+		local BossActive = (ExBool and isQFC(WBQu)) and true or (vC_QTask.IsActive(WBQu) and true or false)
+		local QuestFinish = isQFC(WBQu) and true or false
+		local TimeLeft = isTim(WBQu) and true or false
+		local NoQuestID = WBQu == 99999 and true or false
+
+		if BossActive or TimeLeft or QuestFinish or WBEx == 1 or WBEx == 2 and not NoQuestID then
+--[[
+	--To Do Soon, Tell User Can't See This WB due to Not Done with Quest
+		if WBEx == 1 and PLv >= WBLv then 														-- MoP
+		elseif WBEx == 2 and PLv >= WBLv then 													-- WoD
+		elseif WBEx == 3 and (QFC(43341) or QFC(45727)) and PLv >= WBLv then 					-- Leg A/H
+		elseif WBEx == 11 and QFC(46734) and PLv >= WBLv then 									-- BI A/H
+		elseif WBEx == 12 and QFC(48461) and PLv >= WBLv then									-- Arg Inv A/H
+		elseif WBEx == 4 and (QFC(51918) or QFC(52450)) and PLv >= WBLv and PHA == "A" then		-- BfA A
+		elseif WBEx == 4 and (QFC(51916) or QFC(52451)) and PLv >= WBLv and PHA == "H" then		-- BfA H
+		elseif WBEx == 13 and QFC(56031) and PLv >= WBLv and PHA == "A" then					-- BfA Naj A
+		elseif WBEx == 13 and QFC(56030) and PLv >= WBLv and PHA == "H" then					-- BfA Naj H
+		elseif WBEx == 14 and QFC(53198) and PLv >= WBLv and PHA == "A" then					-- BfA WFA A
+		elseif WBEx == 14 and QFC(53212) and PLv >= WBLv and PHA == "H" then					-- BfA WFA H
+		elseif WBEx == 15 and QFC(53847) and PLv >= WBLv and PHA == "A" then					-- BfA WFD A
+		elseif WBEx == 15 and QFC(54042) and PLv >= WBLv and PHA == "H" then					-- BfA WFD H
+		elseif WBEx == 16 and QFC(56472) and PLv >= WBLv then									-- BfA Uld A/H
+		elseif WBEx == 17 and QFC(56771) and PLv >= WBLv then									-- BfA Val A/H
+		elseif WBEx == 5 and QFC(57878) and PLv >= WBLv then									-- SL ??
+		end
+--]]
+
+			local TimeLeft = (ExBool and vC_CDaTi.GetSecondsUntilWeeklyReset() or (isTim(WBQu) ~= nil and isTim(WBQu) or 0))
+			local WQActive = ((ExBool and isQFC(WBQu)) and ReuseIcons[6] or (vC_QTask.IsActive(WBQu) and ReuseIcons[6] or ReuseIcons[2]))
+			local QuestFinish = isQFC(WBQu) and ReuseIcons[1] or ReuseIcons[2]
+
+			if _G["vMa"..WBQu] == nil then
+				local vMa = CreateFrame("Frame","vMa"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+					vMa:SetBackdrop(Backdrop_NBgnd)
+					vMa:SetSize(25,25)
+					vMa:SetPoint("TOPLEFT",vQC_WBMain,4,HdrPos)
+					local vMaB = CreateFrame("Button","vMaB"..WBQu, _G["vMa"..WBQu])
+						vMaB:SetSize(24,24)
+						vMaB:SetPoint("CENTER", "vMa"..WBQu, "CENTER", 0, 0)		
+						vMaB:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
+						vMaB:SetScript("OnClick", function()
+							if ExBool then MakePins(WBZo,WBXc,WBYc,WBNa) else isAdd(WBQu) end
+						end)
+						vMaB:SetScript("OnEnter", function()
+							GameTooltip:ClearLines()
+							GameTooltip:Hide()
+							GameTooltip:SetOwner(_G["vMaB"..WBQu],"ANCHOR_LEFT")
+								vQC_WBTitle.Icon:SetTexture("Interface\\ENCOUNTERJOURNAL\\UI-EJ-BOSS-"..WBIm)
+							GameTooltip:AddLine(WhatExpac[WBEx].."\n\n")
+							GameTooltip:AddDoubleLine("Boss: ",Colors(7,WBNa))
+							GameTooltip:AddDoubleLine("Zone: ",Colors(7,(WBZo ~= 0 and vC_CMaps.GetMapInfo(WBZo).name or "Unknown")))
+							GameTooltip:AddDoubleLine("Coords: ",Colors(7,(WBZo ~= 0 and (WBXc*100)..", "..(WBYc*100) or "Unknown")))
+							GameTooltip:AddLine("\nClick here to:\n"..Colors(2,(ExBool and "Create Map Pin to World Boss" or "Add World Quest Objective")))
+							GameTooltip:Show()
+						end)
+						vMaB:SetScript("OnLeave", function()
+							GameTooltip:ClearLines()
+							GameTooltip:Hide()
+						end)
+			end
+			if _G["vQu"..WBQu] == nil then
+				local vQu = CreateFrame("Frame","vQu"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+					vQu:SetBackdrop(Backdrop_NBgnd)
+					vQu:SetSize(25,25)
+					vQu:SetPoint("TOPLEFT",vQC_WBMain,26,HdrPos)
+						vQu.Bkgnd = vQu:CreateTexture(nil, "OVERLAY")
+						vQu.Bkgnd:SetSize(19,19)
+						vQu.Bkgnd:SetPoint("CENTER", "vQu"..WBQu, "CENTER", 0, 0)
+						vQu.Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
+			else
+				_G["vQu"..WBQu].Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
+			end
+			if _G["vBI"..WBQu] == nil then
+				local vBI = CreateFrame("Frame","vBI"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+					vBI:SetBackdrop(Backdrop_NBgnd)
+					vBI:SetSize(25,25)
+					vBI:SetPoint("TOPLEFT",vQC_WBMain,48,HdrPos)
+					local vBIB = CreateFrame("Button","vBIB"..WBQu, _G["vBI"..WBQu])
+						vBIB:SetSize(19,19)
+						vBIB:SetPoint("CENTER", "vBI"..WBQu, "CENTER", 0, 0)		
+						vBIB:SetNormalTexture(string.sub(ReuseIcons[7], 3, -6))
+						vBIB:SetScript("OnClick", function()
+							DoNothing("vBI"..WBQu)
+						end)
+						vBIB:SetScript("OnEnter", function()
+							GameTooltip:ClearLines()
+							GameTooltip:Hide()
+							GameTooltip:SetOwner(_G["vBIB"..WBQu],"ANCHOR_CURSOR")
+							GameTooltip:AddLine("Coming Soon™!\n\nNeed Bonus ID from this NPC: "..Colors(2,WBNa),1,1,1,1)
+							GameTooltip:Show()
+						end)
+						vBIB:SetScript("OnLeave", function()
+							GameTooltip:ClearLines()
+							GameTooltip:Hide()
+						end)
+		-- Need Bonus Roll ID before this can be enabled/modified
+		--	else
+		--		_G["vBIB"..WBQu]:SetNormalTexture(string.sub(ReuseIcons[1], 3, -6))
+			end
+			if _G["vBN"..WBQu] == nil then
+				local vBN = CreateFrame("Frame","vBN"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+					vBN:SetBackdrop(Backdrop_NBgnd)
+					vBN:SetSize(223,25)
+					vBN:SetPoint("TOPLEFT",vQC_WBMain,70,HdrPos)
+						vBN.Text = vBN:CreateFontString("T")
+						vBN.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+						vBN.Text:SetPoint("LEFT", "vBN"..WBQu, 6, 0)
+						vBN.Text:SetText(Colors(4,WBNa))
+			end
+			if _G["vTL"..WBQu] == nil then
+				local vTL = CreateFrame("Frame","vTL"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+					vTL:SetBackdrop(Backdrop_NBgnd)
+					vTL:SetSize(120,25)
+					vTL:SetPoint("TOPLEFT",vQC_WBMain,290,HdrPos)
+						vTL.Text = vTL:CreateFontString("vTLT"..WBQu)
+						vTL.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+						vTL.Text:SetPoint("CENTER", "vTL"..WBQu, "CENTER", 0, 0)
+						vTL.Text:SetText(Colors(4,CDT(TimeLeft)))
+				if vTL.Text:GetText() == "---" then TimerDash = true end
+			else
+				_G["vTLT"..WBQu]:SetText(Colors(4,CDT(TimeLeft)))
+			end
+			HdrPos = HdrPos - 22
+			TableRowCount = TableRowCount + 1 -- # of ACTUAL Frame Generated, not the Total # of Boss
+		end
 	end
-	if arg == 1 then
-		vQC_QuestID:Enable()
-		vQC_QID_Dec:Enable()
-		vQC_QID_Inc:Enable()
-		vQC_QuestID_Query:Enable()
-		if DEBUG then vQC_DebugIcon:Enable() end
+	vQC_WBMain:SetSize(413,((22*TableRowCount)+31)) --Fix Height of World Boss once everything is displayed properly
+	vQC_WBMain.Bkgnd:SetSize(vQC_WBMain:GetWidth()-6,vQC_WBMain:GetHeight()-6) --Fix BG with the Main's resize
+	if TimerDash == true then
+		TimerDash = false
+		C_Timer.NewTimer(2, function() WorldBossCheck() end)
 	end
 end
 ------------------------------------------------------------------------
@@ -100,7 +337,7 @@ end
 function WatchQLogAct(arg)
 	if DEBUG then DeOutput("WatchQLogAct") end
 	if arg == 0 then
-		if vQC_QuestID:GetNumber() == 0 then
+		if vQC_QuestID:GetNumber() == 0 or TestNbr ~= "" then
 			vQC_NoResultsFound:Hide()
 			vQC_YesResultsFound:Hide()
 		end
@@ -141,53 +378,62 @@ function CheckQuestAPI()
 	if DEBUG then DeOutput("CheckQuestAPI") end
 	vQC_NoResultsFound:Hide()
 	vQC_YesResultsFound:Hide()
-	vQC_StoryMain:Hide()	
+	vQC_StoryMain:Hide()
 	vQC_ATTIconBG:SetBackdropColor(math.random(), math.random(), math.random(), 1)
-	if QLog.GetTitleForQuestID(vQC_QuestID:GetNumber()) == nil then
-		vQC_Quest_Anim:Show()
-		vQC_Quest_Anim.AG:Play()
+
+	if not vQC_Query_Anim:IsVisible() then AnimToggle(0) end
+	
+	if vC_QLogs.GetTitleForQuestID(vQC_QuestID:GetNumber()) == nil then
 		C_Timer.After(0, function()
 			C_Timer.After(1, function()
-				if QLog.GetTitleForQuestID(vQC_QuestID:GetNumber()) ~= nil then CheckQuestAPI() end
-				vQC_Quest_Anim.AG:Stop()
-				vQC_Quest_Anim:Hide()
+				if vC_QLogs.GetTitleForQuestID(vQC_QuestID:GetNumber()) ~= nil then CheckQuestAPI() end
 			end)
 		end)
 	end
-	QueryQuestAPI()
-	vQC_QuestID:ClearFocus()
+	vQC_StoryMain:Hide()
+	vQC_StoryTitle.Text:SetText("---")
+	vQC_T_St.Text:SetText("---")
+	vQC_T_XY.Text:SetText("---")
+	vQC_T_SZ.Text:SetText("---")
+	vQC_T_MZ.Text:SetText("---")
+	vQC_SLText:SetText("")
+	Status = xpcall(QueryQuestAPI(), err)
 end
 ------------------------------------------------------------------------
 -- Query for QuestLog ID/Title, Bliz too slow to call via API
 ------------------------------------------------------------------------
 function QueryQuestAPI()
 	if DEBUG then DeOutput("QueryQuestAPI") end
-	if (QLog.GetTitleForQuestID(vQC_QuestID:GetNumber()) ~= nil) then
-		if (QLog.IsOnQuest(vQC_QuestID:GetNumber())) then
-			vQC_ResultHeader.Text:SetText(ReuseIcons[5].." |cffc8c864Quest In Progress|r")
+
+	vQC_Query_Anim.Text:SetText(Colors(7,"API"))
+
+	if (vC_QLogs.GetTitleForQuestID(vQC_QuestID:GetNumber()) ~= nil) then
+		if (vC_QLogs.IsOnQuest(vQC_QuestID:GetNumber())) then
+			vQC_ResultHeader.Text:SetText(ReuseIcons[5]..Colors(7," Quest In Progress"))
 		else
-			if (QLog.IsQuestFlaggedCompleted(vQC_QuestID:GetNumber())) then
-				vQC_ResultHeader.Text:SetText(ReuseIcons[1].." |cffc8c864Quest Completed|r")
+			if (vC_QLogs.IsQuestFlaggedCompleted(vQC_QuestID:GetNumber())) then
+				vQC_ResultHeader.Text:SetText(ReuseIcons[1]..Colors(7," Quest Completed"))
 			else
-				vQC_ResultHeader.Text:SetText(ReuseIcons[2].." |cffc8c864Quest Not Completed|r")
+				vQC_ResultHeader.Text:SetText(ReuseIcons[2]..Colors(7," Quest Not Completed"))
 			end
 		end
 		vQC_T_ID.Text:SetText(vQC_QuestID:GetNumber()) -- Quest ID
-		vQC_T_Na.Text:SetText("|cffffff00|Hquest:"..vQC_QuestID:GetNumber()..":::::::::::::::|h"..QLog.GetTitleForQuestID(vQC_QuestID:GetNumber()).."|h|r") -- Quest Name
+		vQC_T_Na.Text:SetText("|CFFFFFF00|Hquest:"..vQC_QuestID:GetNumber()..":::::::::::::::|h"..vC_QLogs.GetTitleForQuestID(vQC_QuestID:GetNumber()).."|h|r") -- Quest Name
 			vQC_T_Na:HookScript("OnEnter", function()
 				GameTooltip:SetOwner(vQC_T_Na, "ANCHOR_CURSOR")
 				GameTooltip:SetHyperlink("quest:"..vQC_QuestID:GetNumber()..":0:0:0:0:0:0:0")
 				GameTooltip:Show()
 			end)
 			vQC_T_Na:HookScript("OnLeave", function() GameTooltip:Hide() end)
-		vQCB_T_Lv.Text:SetText(QLog.GetQuestDifficultyLevel(vQC_QuestID:GetNumber())) -- Quest Level
+		vQCB_T_Lv.Text:SetText(vC_QLogs.GetQuestDifficultyLevel(vQC_QuestID:GetNumber())) -- Quest Level
 		vQC_NoResultsFound:Hide()
 		vQC_YesResultsFound:Show()
 		Status = xpcall(GetQuestLineID(), err) -- Query GetQuestLineID
 	else
-		vQC_ResultHeader.Text:SetText("|cffc8c864Quest ID #|r"..vQC_QuestID:GetNumber().." |cffc8c864has...|r")
+		vQC_ResultHeader.Text:SetText(Colors(7,"Quest ID # ")..vQC_QuestID:GetNumber()..Colors(7," has:"))
 		vQC_NoResultsFound:Show()
 		vQC_YesResultsFound:Hide()
+		AnimToggle(1)
 	end
 	-- Query AllTheThings SavedVariables
 	Status = xpcall(ATTQueryVariables(), err)
@@ -201,82 +447,81 @@ end
 ------------------------------------------------------------------------
 function GetQuestLineID()
 	if DEBUG then DeOutput("GetQuestLineID") end
-	vQC_Quest_Anim:Show()
-	vQC_Quest_Anim.AG:Play()
-	if Re == 0 then mapID = QTask.GetQuestZoneID(vQC_QuestID:GetNumber()) end
+	GQL = GQL + 1
+	if Re == 0 then mapID = vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber()) end
 	-- Is this Quest in Storyline Chains? (and X,Y, Subzone, and Zone)
-	mapID = QTask.GetQuestZoneID(vQC_QuestID:GetNumber())
+	mapID = vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())
 	if mapID then
-		StoryID = QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber()))
+		StoryID = vC_QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber()))
 		if StoryID then
 			-- Show Storyline Window
 			vQC_StoryMain:Show()
 			-- Make a Title for the Storyline Window
-			vQC_StoryTitle.Text:SetText("|cffffff00"..StoryID.questLineName.."|r")
+			vQC_StoryTitle.Text:SetText(Colors(4,StoryID.questLineName))
 			-- Make an Text of Storyline
-			vQC_T_St.Text:SetText("|cffffff00"..StoryID.questLineName.." |r")
+			vQC_T_St.Text:SetText(vQC_StoryTitle.Text:GetText())
 			-- Mark an X,Y Coord
 			vQC_T_XY.Text:SetText(mapID and string.format("%.1f",StoryID.x*100).." "..string.format("%.1f",StoryID.y*100) or "---")
 			-- Show Subzone Name
-			vQC_T_SZ.Text:SetText(mapID and CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).name or "---")
+			vQC_T_SZ.Text:SetText(mapID and vC_CMaps.GetMapInfo(vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).name or "---")
 			-- Show Zone Name (59931 has sub, no parent)
-			vQC_T_MZ.Text:SetText(mapID and (CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID ~= 0 and CMap.GetMapInfo(CMap.GetMapInfo(QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID).name) or "---")
+			vQC_T_MZ.Text:SetText(mapID and (vC_CMaps.GetMapInfo(vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID ~= 0 and vC_CMaps.GetMapInfo(vC_CMaps.GetMapInfo(vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).parentMapID).name) or "---")
 			-- Check/Pull Storyline if any
 			Status = xpcall(ShowChainQuest(), err)
 		else
 			if Re < 5 then
 				Re = Re + 1
-				C_Timer.NewTimer(1, function() GetQuestLineID() end)
+				vQC_Query_Anim.Text:SetText(Colors(7,Re))
+				if GQL < 6 then
+					C_Timer.NewTimer(1, function() GetQuestLineID() end)
+				else --Odd Case where SOME QuestLineID would get "Stuck" on particular StoryLine Query, stop the queue if it failed 5 tries
+					AnimToggle(1)
+					vQC_T_St.Text:SetText(Colors(1,"Issue with Query, Try Again Later..."))
+					GQL = 0
+				end
 			else
 				if Re == 5 then Re = 0 end
 			end
 		end
 	else
 		vQC_StoryMain:Hide()
-		vQC_StoryTitle.Text:SetText("|cffffff00---|r")
+		vQC_StoryTitle.Text:SetText("---")
 		vQC_T_St.Text:SetText("---")
 		vQC_T_XY.Text:SetText("---")
 		vQC_T_SZ.Text:SetText("---")
 		vQC_T_MZ.Text:SetText("---")
 		vQC_SLText:SetText("")
+		AnimToggle(1)
 	end
 	if vQC_T_XY.Text:GetText() == "---" then vQC_MapPinIcon:Hide() else vQC_MapPinIcon:Show() end
-	vQC_Quest_Anim.AG:Stop()
-	vQC_Quest_Anim:Hide()
 	Re = 0
 end
 ------------------------------------------------------------------------
 -- Query the Storyline (Need to Fix into Neater Column)
 ------------------------------------------------------------------------
 function ShowChainQuest()
-	if DEBUG then DeOutput("ShowChainQuest Start"..CP, vQC_ShowChainQuest_Timer) end
+	if DEBUG then DeOutput("ShowChainQuest "..CP) end
 	if not vQC_StoryMain:IsVisible() then
 		GetQuestLineID()
 		return
 	end
 	local vQCSL, tSQC = {}, {}
-	vQC_Story_Anim.AG:Play()
-	vQC_Story_Anim:Show()
-	ToggleInputs(0)
+	if vQC_QuestID:IsEnabled() then ToggleInputs(0) end
+	vQC_Query_Anim.Text:SetText(Colors(7,"0"))
 	wipe(vQCSL)
 	wipe(tSQC)
-	vQCSL = QLine.GetQuestLineQuests(QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).questLineID)
+	vQCSL = vC_QLine.GetQuestLineQuests(vC_QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).questLineID)
 	for i = 1, #vQCSL do
-		local DidQuest = (QLog.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])
-		
+		local DidQuest = (vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])
 		local NbrsSeq = i
-
 		local QuestID = vQCSL[i]
-			if string.len(QuestID) < 7 then
-				Spa = string.rep(" ",7-tonumber(string.len(QuestID)))
-				QuestID = QuestID..Spa
-			end
+		local Space = ""
+		if string.len(QuestID) <= 5 then 
+			Space = string.rep(" ",5-tonumber(string.len(QuestID)))
+		end
+		local QuestNa = (vC_QLogs.GetTitleForQuestID(vQCSL[i]) == nil and Colors(1,"Querying Data...") or (vQCSL[i] == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(vQCSL[i]))) or Colors(6,vC_QLogs.GetTitleForQuestID(vQCSL[i])))
 
-		local QuestNa = (QLog.GetTitleForQuestID(vQCSL[i]) == nil and "|cffFF1100Querying Data..." or (vQCSL[i] == vQC_QuestID:GetNumber() and "|cff00FF00"..QLog.GetTitleForQuestID(vQCSL[i])) or "|cffFFFFFF"..QLog.GetTitleForQuestID(vQCSL[i])).."|r"
-		
-		if string.len(string.sub(QuestNa, 11, -3)) >= 31 then QuestNa = QuestNa:sub(0,39).."...|r" end
-		
-		tMsg = string.format("%s %03d %-7s %s",DidQuest,NbrsSeq,QuestID,QuestNa)
+		tMsg = string.format("%s %03d %-5s %s %s",DidQuest,NbrsSeq,QuestID,Space,QuestNa)
 		tinsert(tSQC,tMsg)
 	end
 	CP = CP + 1
@@ -284,17 +529,15 @@ function ShowChainQuest()
 	vQC_SLText:SetText(tSQC)
 	if strfind(vQC_SLText:GetText(),"Querying Data...") and CP < 6 then
 		vQC_ShowChainQuest_Timer = C_Timer.NewTimer(2, ShowChainQuest)
-		vQC_Story_Anim.Text:SetText("|cffc8c864"..CP.."|r")
+		vQC_Query_Anim.Text:SetText(Colors(7,CP))
 		return
 	else
-		vQC_SLText:SetText(string.gsub(vQC_SLText:GetText(),"FF1100Querying Data...","DD1100Server Failed to Response..."))
+		vQC_SLText:SetText(string.gsub(vQC_SLText:GetText(),"Querying Data...","Server Failed to Response..."))
 	end
+	AnimToggle(1)
 	ToggleInputs(1)
 	CP = 0
-	vQC_Story_Anim.AG:Stop()
-	vQC_Story_Anim:Hide()
 	Status = xpcall(WatchMemoryCount(), err) --Clean up After Storyline Query
-	if DEBUG then DeOutput("ShowChainQuest End"..CP, vQC_ShowChainQuest_Timer) end
 end
 ------------------------------------------------------------------------
 -- Query Information from AllTheThings SavedVariables
@@ -344,18 +587,42 @@ function ATTQueryVariables()
 	end
 end
 ------------------------------------------------------------------------
+-- Addon Opener (SlashCmd doesn't like Args)
+------------------------------------------------------------------------
+function QCOpen()
+	WatchQLogAct(0)
+end
+------------------------------------------------------------------------
+-- Color Choice
+------------------------------------------------------------------------
+function Colors(c,t)
+	-- 1R 2G 3B 4Y 5B 6W 7Custom
+	local ColorChoice = { "FF0000", "00FF00", "0000FF", "FFFF00", "000000", "FFFFFF", "CCCC66", }
+	return "|cFF"..ColorChoice[c]..t.."|r"
+end
+------------------------------------------------------------------------
+-- Convert Epoch Sec to D/H:M.S
+------------------------------------------------------------------------
+function CDT(T)
+	if T == 0 then return "---" end
+	local d = floor(T/86400)
+	local h = floor(mod(T, 86400)/3600)
+	local m = floor(mod(T,3600)/60)
+	local s = floor(mod(T,60))
+	return format("%dd %02dh %02dm %02ds",d,h,m,s)
+end
+------------------------------------------------------------------------
 -- Memory Check/Indicator and Dump if needed (Quest Query can be.... annoying)
 ------------------------------------------------------------------------
 function WatchMemoryCount()
-	if DEBUG then DeOutput("WatchMemoryCount", QC_Mem) end
+	if DEBUG then DeOutput("WatchMemoryCount") end
 	QC_Mem = GetAddOnMemoryUsage("QuestChecker")
-	--C_Timer.After(30, WatchMemoryCount)
 	if QC_Mem < 150 then vQC_Quest_MemIcon:Hide() else vQC_Quest_MemIcon:Show() end
 	if QC_Mem > 1024 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Red") end
 	if QC_Mem < 1024 and QC_Mem > 512 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Yellow") end
 	if QC_Mem < 512 and QC_Mem > 151 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green") end
 	if QC_Mem > 2048 and not InCombatLockdown() then
-		print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2).." (|cff00ff00Dumping Mem: "..(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb")).."|r)")
+		print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2)..Colors(6,"Dumping Mem: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb"))))
 		collectgarbage("collect")
 		vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green")
 	end
@@ -364,7 +631,7 @@ end
 -- Game ToolTip Simplified
 ------------------------------------------------------------------------
 function ToolTipsOnly(f)
-	--if DEBUG then DeOutput("ToolTipsOnly", QC_Mem) end
+	if DEBUG then DeOutput("ToolTipsOnly") end
 	GameTooltip:ClearLines()
 	GameTooltip:Hide()
 	if f == 0 then return end
@@ -373,10 +640,11 @@ function ToolTipsOnly(f)
 	else
 		GameTooltip:SetOwner(f, "ANCHOR_RIGHT")
 	end
+	if f == vQC_WBMapB then msg = vQC_WBMapB:GetText() end
 	if f == vQC_MiniMap then msg = vQC_AppTitle end
 	if f == vQC_MiniQ or f == vQC_MiniW then msg = "Quest ID\n\nCheck the Quest." end
-	if f == vQC_MapPinIcon then msg = "Pin the Map" end
-	if f == vQC_Quest_MemIcon then msg = "Current: |cff00ff00"..(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb")).."|r" end
+	if f == vQC_MapPinIcon then msg = "Pin coord to the map" end
+	if f == vQC_Quest_MemIcon then msg = Colors(6,"Current: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb"))) end
 	GameTooltip:AddLine(msg,1,1,1,1)
 	GameTooltip:Show()
 end
@@ -398,7 +666,41 @@ function QuestUpDown(arg)
 	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
 		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
 	end
-	CheckQuestAPI()
+	Status = xpcall(CheckQuestAPI(), err)
+end
+------------------------------------------------------------------------
+-- Animations Toggle
+------------------------------------------------------------------------
+function AnimToggle(arg)
+	if DEBUG then DeOutput("AnimToggle",arg) end
+	if arg == 0 then
+		vQC_Query_Anim:Show()
+		vQC_Query_Anim.AG:Play()
+	end
+	if arg == 1 then
+		vQC_Query_Anim.AG:Stop()
+		vQC_Query_Anim:Hide()
+	end
+end
+------------------------------------------------------------------------
+-- Toggle Buttons To Prevent Multiple Query Loop
+------------------------------------------------------------------------
+function ToggleInputs(arg)
+	if DEBUG then DeOutput("ToggleInputs") end
+	if arg == 0 then
+		vQC_QuestID:Disable()
+		vQC_QID_Dec:Disable()
+		vQC_QID_Inc:Disable()
+		vQC_QuestID_Query:Disable()
+		if DEBUG then vQC_DebugIcon:Disable() end
+	end
+	if arg == 1 then
+		vQC_QuestID:Enable()
+		vQC_QID_Dec:Enable()
+		vQC_QID_Inc:Enable()
+		vQC_QuestID_Query:Enable()
+		if DEBUG then vQC_DebugIcon:Enable() end
+	end
 end
 ------------------------------------------------------------------------
 -- WOWHead Link Display
@@ -419,27 +721,18 @@ end
 ------------------------------------------------------------------------
 -- Make an Map Pin or TomTom (if exist)
 ------------------------------------------------------------------------
-local function MakePins()
+function MakePins(Q,X,Y,B)
 	if DEBUG then DeOutput("MakePins") end
-	if vQC_MapPinIcon:IsVisible() then
+		local Qz = ((X == 0 and Y == 0) and vC_QTask.GetQuestZoneID(Q) or Q)
+		local Xy = ((X == 0 and Y == 0) and vC_QLine.GetQuestLineInfo(Q,vC_QTask.GetQuestZoneID(Q)).x or X)
+		local Yx = ((X == 0 and Y == 0) and vC_QLine.GetQuestLineInfo(Q,vC_QTask.GetQuestZoneID(Q)).y or Y)
+		local Bo = ((X == 0 and Y == 0) and vQC_T_Na.Text:GetText() or B)
 		if IsAddOnLoaded("TomTom") then
-			TomTom:AddWaypoint(
-				QTask.GetQuestZoneID(vQC_QuestID:GetNumber()),
-				QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).x,
-				QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).y,
-				{ title = vQC_T_Na.Text:GetText(), persistent = nil, minimap = true, world = true, from = vQC_AppTitle, }
-			)
+			TomTom:AddWaypoint( Qz, Xy, Yx, { title = Bo, persistent = nil, world = true, from = vQC_AppTitle, } )
 		else
-			CMap.SetUserWaypoint(
-				UiMapPoint.CreateFromCoordinates(
-					QTask.GetQuestZoneID(vQC_QuestID:GetNumber()),
-					QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).x,
-					QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).y
-				)
-			)
+			vC_CMaps.SetUserWaypoint( UiMapPoint.CreateFromCoordinates( Qz, Xy, Yx ) )
 			C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 		end
-	end
 end
 ------------------------------------------------------------------------
 -- Mini Map Position when Dragging
@@ -457,8 +750,8 @@ end
 ------------------------------------------------------------------------
 -- Nothing here, right?
 ------------------------------------------------------------------------
-function DoNothing()
-	if DEBUG then DeOutput("DoNothing") end
+function DoNothing(f)
+	if DEBUG then DeOutput("Forgot Something Here? ",f) end
 	--I mean, it's obvious isn't it?
 end
 ------------------------------------------------------------------------
@@ -493,7 +786,7 @@ end
 		vQC_MiniQ:ClearAllPoints()
 		vQC_MiniQ:SetPoint("TOPRIGHT", QuestFrame, -3, -23)
 			vQC_MiniQ.Text = vQC_MiniQ:CreateFontString("T")
-			vQC_MiniQ.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
+			vQC_MiniQ.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
 			vQC_MiniQ.Text:SetPoint("LEFT", vQC_MiniQ, 10, 0)
 			vQC_MiniQ.Text:SetText("")
 			local vQC_QFIcon = CreateFrame("Button", "vQC_QFIcon", vQC_MiniQ)
@@ -510,7 +803,7 @@ end
 		vQC_MiniW:ClearAllPoints()
 		vQC_MiniW:SetPoint("TOPRIGHT", QuestMapFrame.DetailsFrame, 27, 45)
 			vQC_MiniW.Text = vQC_MiniW:CreateFontString("T")
-			vQC_MiniW.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
+			vQC_MiniW.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
 			vQC_MiniW.Text:SetPoint("LEFT", vQC_MiniW, 10, 0)
 			vQC_MiniW.Text:SetText("")
 			local vQC_WFIcon = CreateFrame("Button", "vQC_WFIcon", vQC_MiniW)
@@ -550,7 +843,7 @@ end
 			vQC_Title.IconB:SetPoint("TOPLEFT", vQC_Title, 25, 35)
 			vQC_Title.IconB:SetTexture("Interface\\TutorialFrame\\UI-TutorialFrame-QuestComplete")
 			vQC_Title.Text = vQC_Title:CreateFontString("T")
-			vQC_Title.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Title, "OUTLINE")
+			vQC_Title.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
 			vQC_Title.Text:SetPoint("CENTER", vQC_Title)
 			vQC_Title.Text:SetText(vQC_AppTitle)
 			local vQC_TitleX = CreateFrame("Button", "vQC_TitleX", vQC_Title, "UIPanelCloseButton")
@@ -569,7 +862,7 @@ end
 			vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green")
 			vQC_Quest_MemIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_Quest_MemIcon) end)
 			vQC_Quest_MemIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
-			--vQC_Quest_MemIcon:Hide()
+			vQC_Quest_MemIcon:Hide()
 		local vQC_QuestID = CreateFrame("EditBox", "vQC_QuestID", vQC_Quest, "InputBoxTemplate")
 			vQC_QuestID:SetPoint("CENTER", vQC_Quest, "CENTER", 0, 0)
 			vQC_QuestID:SetSize(70,20)
@@ -577,7 +870,7 @@ end
 			vQC_QuestID:SetAutoFocus(false)
 			vQC_QuestID:SetMultiLine(false)
 			vQC_QuestID:SetNumeric(true)
-			vQC_QuestID:SetNumber(0)
+			vQC_QuestID:SetNumber(TestNbr or 0)
 			vQC_QuestID:SetScript("OnEnterPressed", function() CheckQuestAPI() end)
 		local vQC_QID_Dec = CreateFrame("Button", "vQC_QID_Dec", vQC_Quest)
 			vQC_QID_Dec:SetSize(22,22)
@@ -601,7 +894,7 @@ end
 		vQC_ResultHeader:ClearAllPoints()
 		vQC_ResultHeader:SetPoint("TOP", vQC_Quest, 0, 0-vQC_Quest:GetHeight()+1)
 			vQC_ResultHeader.Text = vQC_ResultHeader:CreateFontString("T")
-			vQC_ResultHeader.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Header, "OUTLINE")
+			vQC_ResultHeader.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
 			vQC_ResultHeader.Text:SetPoint("CENTER", vQC_ResultHeader, "CENTER", 0, 0)
 			vQC_ResultHeader.Text:SetText("")
 			
@@ -611,13 +904,13 @@ end
 		vQC_NoResultsFound:ClearAllPoints()
 		vQC_NoResultsFound:SetPoint("TOP", vQC_ResultHeader, 0, 0-vQC_ResultHeader:GetHeight()+3)
 			vQC_NoResultsFound.Text = vQC_NoResultsFound:CreateFontString("T")
-			vQC_NoResultsFound.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
+			vQC_NoResultsFound.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
 			vQC_NoResultsFound.Text:SetPoint("TOP", vQC_NoResultsFound, 0, 0)
 			vQC_NoResultsFound.Text:SetText(
 				"|TInterface\\HELPFRAME\\HelpIcon-ReportAbuse:28|t|TInterface\\Store\\category-icon-placeholder:42|t"..
 				"|TInterface\\PVPFrame\\PVPCurrency-Honor-Alliance:36|t|TInterface\\PVPFrame\\PVPCurrency-Honor-Horde:36|t"..
 				"|TInterface\\HELPFRAME\\HelpIcon-CharacterStuck:32|t\n"..
-				"Never Existed/Removed,\nRare/Hidden Trigger,\nOpposite Faction,\n|cff00ff00OR|r\nSlow API Request"
+				"Never Existed/Removed,\nRare/Hidden Trigger,\nOpposite Faction,\n"..Colors(2,"OR").."\nSlow API Request"
 			)
 -- Main Quest Results (Found)
 	local vQC_YesResultsFound = CreateFrame("Frame", "vQC_YesResultsFound", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
@@ -625,7 +918,7 @@ end
 		vQC_YesResultsFound:ClearAllPoints()
 		vQC_YesResultsFound:SetPoint("TOP", vQC_ResultHeader, 0, 0-vQC_ResultHeader:GetHeight())
 			vQC_YesResultsFound.Text = vQC_YesResultsFound:CreateFontString("T") -- Quest Completed or Not
-			vQC_YesResultsFound.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Header, "OUTLINE")
+			vQC_YesResultsFound.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
 			vQC_YesResultsFound.Text:SetPoint("TOP", vQC_YesResultsFound, 0, -8)
 			vQC_YesResultsFound.Text:SetText("")
 			
@@ -635,14 +928,14 @@ end
 		vQC_L_ID:SetSize(tRWi,20)
 		vQC_L_ID:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0)
 			vQC_L_ID.Text = vQC_L_ID:CreateFontString("T")
-			vQC_L_ID.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_ID.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_ID.Text:SetPoint("RIGHT", vQC_L_ID)
-			vQC_L_ID.Text:SetText("|cffffff00ID:|r")
+			vQC_L_ID.Text:SetText(Colors(4,"ID"))
 	local vQC_T_ID = CreateFrame("Frame", "vQC_T_ID", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_T_ID:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_ID:GetWidth(),20)
 		vQC_T_ID:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0)
 			vQC_T_ID.Text = vQC_T_ID:CreateFontString("T")
-			vQC_T_ID.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQC_T_ID.Text:SetFont(FontStyle[1], Font_Sm)
 			vQC_T_ID.Text:SetPoint("LEFT", vQC_T_ID)
 			vQC_T_ID.Text:SetText("---")
 -- Quest Name
@@ -650,14 +943,14 @@ end
 		vQC_L_Na:SetSize(tRWi,20)
 		vQC_L_Na:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0-tHei*2)
 			vQC_L_Na.Text = vQC_L_Na:CreateFontString("T")
-			vQC_L_Na.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_Na.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_Na.Text:SetPoint("RIGHT", vQC_L_Na)
-			vQC_L_Na.Text:SetText("|cffffff00Name:|r")
+			vQC_L_Na.Text:SetText(Colors(4,"Name"))
 	local vQC_T_Na = CreateFrame("Frame", "vQC_T_Na", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_T_Na:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_Na:GetWidth(),20)
 		vQC_T_Na:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0-tHei*2)
 			vQC_T_Na.Text = vQC_T_Na:CreateFontString("T")
-			vQC_T_Na.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQC_T_Na.Text:SetFont(FontStyle[1], Font_Sm)
 			vQC_T_Na.Text:SetPoint("LEFT", vQC_T_Na)
 			vQC_T_Na.Text:SetText("---")
 -- Quest Level
@@ -665,14 +958,14 @@ end
 		vQC_L_Lv:SetSize(tRWi,20)
 		vQC_L_Lv:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0-tHei*4)
 			vQC_L_Lv.Text = vQC_L_Lv:CreateFontString("T")
-			vQC_L_Lv.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_Lv.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_Lv.Text:SetPoint("RIGHT", vQC_L_Lv)
-			vQC_L_Lv.Text:SetText("|cffffff00Level:|r")
+			vQC_L_Lv.Text:SetText(Colors(4,"Level"))
 	local vQCB_T_Lv = CreateFrame("Frame", "vQCB_T_Lv", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQCB_T_Lv:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_Lv:GetWidth(),20)
 		vQCB_T_Lv:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0-tHei*4)
 			vQCB_T_Lv.Text = vQCB_T_Lv:CreateFontString("T")
-			vQCB_T_Lv.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQCB_T_Lv.Text:SetFont(FontStyle[1], Font_Sm)
 			vQCB_T_Lv.Text:SetPoint("LEFT", vQCB_T_Lv)
 			vQCB_T_Lv.Text:SetText("---")
 -- Quest XY Coord
@@ -680,14 +973,14 @@ end
 		vQC_L_XY:SetSize(tRWi,20)
 		vQC_L_XY:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0-tHei*6)
 			vQC_L_XY.Text = vQC_L_XY:CreateFontString("T")
-			vQC_L_XY.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_XY.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_XY.Text:SetPoint("RIGHT", vQC_L_XY)
-			vQC_L_XY.Text:SetText("|cffffff00Coord:|r")
+			vQC_L_XY.Text:SetText(Colors(4,"Coord:"))
 	local vQC_T_XY = CreateFrame("Frame", "vQC_T_XY", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_T_XY:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_XY:GetWidth(),20)
 		vQC_T_XY:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0-tHei*6)
 			vQC_T_XY.Text = vQC_T_XY:CreateFontString("T")
-			vQC_T_XY.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQC_T_XY.Text:SetFont(FontStyle[1], Font_Sm)
 			vQC_T_XY.Text:SetPoint("LEFT", vQC_T_XY)
 			vQC_T_XY.Text:SetText("---")
 -- Quest Subzone
@@ -695,14 +988,14 @@ end
 		vQC_L_SZ:SetSize(tRWi,20)
 		vQC_L_SZ:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0-tHei*8)
 			vQC_L_SZ.Text = vQC_L_SZ:CreateFontString("T")
-			vQC_L_SZ.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_SZ.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_SZ.Text:SetPoint("RIGHT", vQC_L_SZ)
-			vQC_L_SZ.Text:SetText("|cffffff00Subzone:|r")
+			vQC_L_SZ.Text:SetText(Colors(4,"Subzone"))
 	local vQC_T_SZ = CreateFrame("Frame", "vQC_T_SZ", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_T_SZ:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_SZ:GetWidth(),20)
 		vQC_T_SZ:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0-tHei*8)
 			vQC_T_SZ.Text = vQC_T_SZ:CreateFontString("T")
-			vQC_T_SZ.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQC_T_SZ.Text:SetFont(FontStyle[1], Font_Sm)
 			vQC_T_SZ.Text:SetPoint("LEFT", vQC_T_SZ)
 			vQC_T_SZ.Text:SetText("---")
 -- Quest Zone
@@ -710,14 +1003,14 @@ end
 		vQC_L_MZ:SetSize(tRWi,20)
 		vQC_L_MZ:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0-tHei*10)
 			vQC_L_MZ.Text = vQC_L_MZ:CreateFontString("T")
-			vQC_L_MZ.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_MZ.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_MZ.Text:SetPoint("RIGHT", vQC_L_MZ)
-			vQC_L_MZ.Text:SetText("|cffffff00Zone:|r")
+			vQC_L_MZ.Text:SetText(Colors(4,"Zone"))
 	local vQC_T_MZ = CreateFrame("Frame", "vQC_T_MZ", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_T_MZ:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_MZ:GetWidth(),20)
 		vQC_T_MZ:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0-tHei*10)
 			vQC_T_MZ.Text = vQC_T_MZ:CreateFontString("T")
-			vQC_T_MZ.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQC_T_MZ.Text:SetFont(FontStyle[1], Font_Sm)
 			vQC_T_MZ.Text:SetPoint("LEFT", vQC_T_MZ)
 			vQC_T_MZ.Text:SetText("---")
 -- Quest Storyline
@@ -725,14 +1018,14 @@ end
 		vQC_L_St:SetSize(tRWi,20)
 		vQC_L_St:SetPoint("TOPLEFT", vQC_YesResultsFound, 0, 0-tHei*12)
 			vQC_L_St.Text = vQC_L_St:CreateFontString("T")
-			vQC_L_St.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body, "OUTLINE")
+			vQC_L_St.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 			vQC_L_St.Text:SetPoint("RIGHT", vQC_L_St)
-			vQC_L_St.Text:SetText("|cffffff00Storyline:|r")
+			vQC_L_St.Text:SetText(Colors(4,"Storyline"))
 	local vQC_T_St = CreateFrame("Frame", "vQC_T_St", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_T_St:SetSize(vQC_YesResultsFound:GetWidth()-vQC_L_St:GetWidth(),20)
 		vQC_T_St:SetPoint("TOPRIGHT", vQC_YesResultsFound, 0, 0-tHei*12)
 			vQC_T_St.Text = vQC_T_St:CreateFontString("T")
-			vQC_T_St.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+			vQC_T_St.Text:SetFont(FontStyle[1], Font_Sm)
 			vQC_T_St.Text:SetPoint("LEFT", vQC_T_St)
 			vQC_T_St.Text:SetText("---")
 ------------------------------------------------------------------------
@@ -757,9 +1050,9 @@ end
 		vQC_StoryTitle:ClearAllPoints()
 		vQC_StoryTitle:SetPoint("TOP", vQC_StoryMain, 0, -3)
 			vQC_StoryTitle.Text = vQC_StoryTitle:CreateFontString("T")
-			vQC_StoryTitle.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Title, "OUTLINE")
+			vQC_StoryTitle.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
 			vQC_StoryTitle.Text:SetPoint("CENTER", vQC_StoryTitle, "CENTER",0, 0)
-			vQC_StoryTitle.Text:SetText("|cffffff00---|r")
+			vQC_StoryTitle.Text:SetText(Colors(4,"---"))
 -- Storyline Results
 	local vQC_SLResult = CreateFrame("Frame", "vQC_SLResult", vQC_StoryMain, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_SLResult:SetSize(vQC_StoryMain:GetWidth()-5,vQC_StoryMain:GetHeight()-33)
@@ -769,8 +1062,8 @@ end
 				vQC_SLScroll:SetSize(vQC_SLResult:GetWidth()-30,vQC_SLResult:GetHeight()-5)
 				vQC_SLScroll:SetPoint("TOPLEFT", vQC_SLResult, 5, -5)
 					vQC_SLText = CreateFrame("EditBox", "vQC_SLText", vQC_SLScroll)
-					vQC_SLText:SetWidth(vQC_StoryMain:GetWidth()-25)
-					vQC_SLText:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+					vQC_SLText:SetWidth(600)
+					vQC_SLText:SetFont(FontStyle[1], Font_Sm)
 					vQC_SLText:SetAutoFocus(false)
 					vQC_SLText:SetMultiLine(true)
 					vQC_SLText:EnableMouse(true)
@@ -801,12 +1094,12 @@ end
 		vQC_ATTTitle:ClearAllPoints()
 		vQC_ATTTitle:SetPoint("TOP", vQC_ATTMain, 0, -3)
 			vQC_ATTTitle.Text = vQC_ATTTitle:CreateFontString("T")
-			vQC_ATTTitle.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
+			vQC_ATTTitle.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
 			vQC_ATTTitle.Text:SetPoint("CENTER", vQC_ATTTitle, 0, 1)
-			vQC_ATTTitle.Text:SetText("|cffffff00Completed By|r")
+			vQC_ATTTitle.Text:SetText(Colors(7,"Completed By"))
 -- ATT Icon
 	local vQC_ATTIconBG = CreateFrame("Frame", "vQC_ATTIconBG", vQC_ATTTitle, BackdropTemplateMixin and "BackdropTemplate")
-		vQC_ATTIconBG:SetBackdrop(ATTIconBkgnd)
+		vQC_ATTIconBG:SetBackdrop(Backdrop_NBdr)
 		vQC_ATTIconBG:SetBackdropColor(math.random(), math.random(), math.random(), 1)
 		vQC_ATTIconBG:SetSize(38,32)
 		vQC_ATTIconBG:ClearAllPoints()
@@ -820,7 +1113,6 @@ end
 			vQC_ATTTitle.Icon:SetPoint("CENTER", vQC_ATTIconBG, "CENTER", 0, 2)
 			vQC_ATTTitle.Icon:SetTexture("Interface\\Addons\\QuestChecker\\Images\\ATTImages")
 			vQC_ATTTitle.Icon:SetTexCoord(0.625, 0, 0.625, 1, 0.75, 0, 0.75, 1)
-			
 -- ATT Result
 	local vQC_ATTResult = CreateFrame("Frame", "vQC_ATTResult", vQC_ATTMain, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_ATTResult:SetSize(vQC_ATTMain:GetWidth()-5,TmpHeight-vQC_ATTTitle:GetHeight()-3) --59 for Sort Area
@@ -832,11 +1124,56 @@ end
 			vQC_ATTRScr:SetHeight(vQC_ATTResult:GetHeight()-12)
 				vQC_ATTArea = CreateFrame("EditBox", "vQC_ATTArea", vQC_ATTRScr)
 				vQC_ATTArea:SetWidth(vQC_ATTMain:GetWidth()-30)
-				vQC_ATTArea:SetFont("Fonts\\FRIZQT__.TTF", F_Body)
+				vQC_ATTArea:SetFont(FontStyle[1], Font_Sm)
 				vQC_ATTArea:SetAutoFocus(false)
 				vQC_ATTArea:SetMultiLine(true)
 				vQC_ATTArea:EnableMouse(false)
 			vQC_ATTRScr:SetScrollChild(vQC_ATTArea)
+			
+------------------------------------------------------------------------
+-- For World Boss Window
+------------------------------------------------------------------------	
+	--World Boss Icon
+	local vQC_MainWBIcon = CreateFrame("Button", "vQC_MainWBIcon", vQC_Main)
+		vQC_MainWBIcon:SetSize(42,42)
+		vQC_MainWBIcon:SetPoint("TOPRIGHT", vQC_Main, -5, -25)
+		vQC_MainWBIcon:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\DungeonJournal")
+		vQC_MainWBIcon:GetNormalTexture():SetTexCoord(0.29296875, 0.859375, 0.29296875, 0.9375, 0.33203125, 0.859375, 0.33203125, 0.9375)
+		vQC_MainWBIcon:SetScript("OnClick", function() WorldBossCheck() end)
+	-- WorldBoss Frame
+	local vQC_WBMain = CreateFrame("Frame", "vQC_WBMain", UIParent, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_WBMain:SetBackdrop(Backdrop_NBgnd)
+		vQC_WBMain:SetSize(413,100)
+		vQC_WBMain:ClearAllPoints()
+		vQC_WBMain:SetPoint("CENTER", UIParent, 0, 0)
+		vQC_WBMain:EnableMouse(true)
+		vQC_WBMain:SetMovable(true)
+		vQC_WBMain:RegisterForDrag("LeftButton")
+		vQC_WBMain:SetScript("OnDragStart", function() vQC_WBMain:StartMoving() end)
+		vQC_WBMain:SetScript("OnDragStop", function() vQC_WBMain:StopMovingOrSizing() end)
+			vQC_WBMain.Bkgnd = vQC_WBMain:CreateTexture(nil, "BACKGROUND")
+			vQC_WBMain.Bkgnd:SetSize(vQC_WBMain:GetWidth()-6,vQC_WBMain:GetHeight()-6)
+			vQC_WBMain.Bkgnd:SetPoint("TOPLEFT", vQC_WBMain, 3, 0)
+			vQC_WBMain.Bkgnd:SetTexture("Interface\\Artifacts\\ArtifactUI"..WBMainBG[math.random(#WBMainBG)])
+			vQC_WBMain.Bkgnd:SetTexCoord(0, 0, 0, 0.390, 0.585, 0, 0.585, 0.390)
+	local vQC_WBTitle = CreateFrame("Frame", "vQC_WBTitle", vQC_WBMain, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_WBTitle:SetBackdrop(Backdrop_B)
+		vQC_WBTitle:SetSize(vQC_WBMain:GetWidth()-6,24)
+		vQC_WBTitle:ClearAllPoints()
+		vQC_WBTitle:SetPoint("TOP", vQC_WBMain, 0, -3)
+			vQC_WBTitle.Icon = vQC_WBTitle:CreateTexture(nil, "OVERLAY")
+			vQC_WBTitle.Icon:SetSize(128,64)
+			vQC_WBTitle.Icon:SetPoint("TOPLEFT", vQC_WBTitle, 0, 43)
+			vQC_WBTitle.Icon:SetTexture("Interface\\ENCOUNTERJOURNAL\\UI-EJ-BOSS-"..WorldBossList[math.random(#WorldBossList)][5])
+			vQC_WBTitle.Text = vQC_WBTitle:CreateFontString("T")
+			vQC_WBTitle.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
+			vQC_WBTitle.Text:SetPoint("CENTER", vQC_WBTitle, 0, 0)
+			vQC_WBTitle.Text:SetText(Colors(7,"World Boss & More"))
+		local vQC_WBMainT = CreateFrame("Button", "vQC_TitleX", vQC_WBTitle, "UIPanelCloseButton")
+			vQC_WBMainT:SetSize(26,26)
+			vQC_WBMainT:SetPoint("RIGHT", vQC_WBTitle, 0, 0)
+			vQC_WBMainT:SetScript("OnClick", function() vQC_WBMain:Hide() end)
+		
 ------------------------------------------------------------------------
 -- Icon for Map Pin if X,Y Exist
 ------------------------------------------------------------------------
@@ -845,7 +1182,7 @@ end
 		vQC_MapPinIcon:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
 		vQC_MapPinIcon:ClearAllPoints()
 		vQC_MapPinIcon:SetPoint("RIGHT", vQC_T_XY, -8, 0)
-		vQC_MapPinIcon:SetScript("OnClick", function() MakePins() end)
+		vQC_MapPinIcon:SetScript("OnClick", function() MakePins(vQC_QuestID:GetNumber(),0,0,0) end)
 		vQC_MapPinIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MapPinIcon) end)
 		vQC_MapPinIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 		vQC_MapPinIcon:Hide()
@@ -858,7 +1195,7 @@ end
 		vQC_WHLinkIcon:SetNormalTexture("Interface\\Addons\\QuestChecker\\Images\\ATTImages")
 		vQC_WHLinkIcon:GetNormalTexture():SetTexCoord(0.75, 0, 0.75, 1, 0.875, 0, 0.875, 1)
 		vQC_WHLinkIcon:ClearAllPoints()
-		vQC_WHLinkIcon:SetPoint("TOPLEFT", vQC_Quest, 5, -5)
+		vQC_WHLinkIcon:SetPoint("TOPLEFT", vQC_Main, 8, -23)
 		vQC_WHLinkIcon:SetScript("OnClick", function() WHLink() end)
 	-- Show Link Box	
 	local vQC_WHLinkBox = CreateFrame("Frame", "vQC_WHLinkBox", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
@@ -876,59 +1213,23 @@ end
 -- Search Animations
 ------------------------------------------------------------------------
 	--For Query in Result Frame
-	local vQC_Quest_Anim = CreateFrame("Frame", "vQC_Quest_Anim", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
-		vQC_Quest_Anim:SetBackdropColor(1,0,1,0)
-		vQC_Quest_Anim:SetPoint("TOPRIGHT", vQC_Main, 3, -25)
-		vQC_Quest_Anim:SetSize(58,58)
-			vQC_Quest_Anim.Text = vQC_Quest_Anim:CreateFontString("T")
-			vQC_Quest_Anim.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
-			vQC_Quest_Anim.Text:SetPoint("CENTER", vQC_Quest_Anim, "CENTER", 0, 0)
-			vQC_Quest_Anim.Text:SetText("|cffc8c864API|r")
-		vQC_Quest_Anim.Bkgnd = vQC_Quest_Anim:CreateTexture(nil, "ARTWORK")
-		vQC_Quest_Anim.Bkgnd:SetTexture("Interface\\UNITPOWERBARALT\\Arcane_Circular_Frame")
-		vQC_Quest_Anim.Bkgnd:SetAllPoints(vQC_Quest_Anim)
-			vQC_Quest_Anim.AG = vQC_Quest_Anim.Bkgnd:CreateAnimationGroup()
-				vQC_Quest_Anim.AG:SetLooping("REPEAT")
-			vQC_Quest_Anim.CA = vQC_Quest_Anim.AG:CreateAnimation("Rotation")
-				vQC_Quest_Anim.CA:SetDuration(5)
-				vQC_Quest_Anim.CA:SetDegrees(360)
-		vQC_Quest_Anim:Hide()
-	--For Query in StoryLine
-	local vQC_Story_Anim = CreateFrame("Frame", "vQC_Story_Anim", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
-		vQC_Story_Anim:SetBackdropColor(1,0,1,0)
-		vQC_Story_Anim:SetPoint("BOTTOMRIGHT", vQC_Main, 3, 0)
-		vQC_Story_Anim:SetSize(58,58)
-			vQC_Story_Anim.Text = vQC_Story_Anim:CreateFontString("T")
-			vQC_Story_Anim.Text:SetFont("Fonts\\FRIZQT__.TTF", F_Sm_Title, "OUTLINE")
-			vQC_Story_Anim.Text:SetPoint("CENTER", vQC_Story_Anim, "CENTER", 1, 0)
-			vQC_Story_Anim.Text:SetText("|cffc8c8640|r")
-		vQC_Story_Anim.Bkgnd = vQC_Story_Anim:CreateTexture(nil, "ARTWORK")
-		vQC_Story_Anim.Bkgnd:SetTexture("Interface\\UNITPOWERBARALT\\Ice_Circular_Frame")
-		vQC_Story_Anim.Bkgnd:SetAllPoints(vQC_Story_Anim)
-			vQC_Story_Anim.AG = vQC_Story_Anim.Bkgnd:CreateAnimationGroup()
-				vQC_Story_Anim.AG:SetLooping("REPEAT")
-			vQC_Story_Anim.CA = vQC_Story_Anim.AG:CreateAnimation("Rotation")
-				vQC_Story_Anim.CA:SetDuration(5)
-				vQC_Story_Anim.CA:SetDegrees(360)
-		vQC_Story_Anim:Hide()
-------------------------------------------------------------------------
--- Debug Quest # Randomonizer
-------------------------------------------------------------------------
-if DEBUG then
-	local vQC_DebugIcon = CreateFrame("Button", "vQC_DebugIcon", vQC_ATTTitle)
-		vQC_DebugIcon:SetSize(24, 24)
-		vQC_DebugIcon:SetNormalTexture("Interface\\GLUES\\CharacterSelect\\CharacterUndelete")
-		vQC_DebugIcon:ClearAllPoints()
-			if LeftRightATT == "LEFT" then
-				vQC_DebugIcon:SetPoint("RIGHT", vQC_ATTTitle, 0, 0)
-			elseif LeftRightATT == "RIGHT" then
-				vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
-			end
-		vQC_DebugIcon:SetScript("OnClick", function()
-			vQC_QuestID:SetNumber(math.random(70000))
-			CheckQuestAPI()
-		end)
-end
+	local vQC_Query_Anim = CreateFrame("Frame", "vQC_Query_Anim", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_Query_Anim:SetBackdropColor(1,0,1,0)
+		vQC_Query_Anim:SetPoint("BOTTOMRIGHT", vQC_Main, 3, -2)
+		vQC_Query_Anim:SetSize(58,58)
+			vQC_Query_Anim.Text = vQC_Query_Anim:CreateFontString("T")
+			vQC_Query_Anim.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+			vQC_Query_Anim.Text:SetPoint("CENTER", vQC_Query_Anim, "CENTER", 1, 0)
+			vQC_Query_Anim.Text:SetText("")
+		vQC_Query_Anim.Bkgnd = vQC_Query_Anim:CreateTexture(nil, "BACKGROUND")
+		vQC_Query_Anim.Bkgnd:SetTexture("Interface\\UNITPOWERBARALT\\Arcane_Circular_Frame")
+		vQC_Query_Anim.Bkgnd:SetAllPoints(vQC_Query_Anim)
+			vQC_Query_Anim.AG = vQC_Query_Anim.Bkgnd:CreateAnimationGroup()
+				vQC_Query_Anim.AG:SetLooping("REPEAT")
+			vQC_Query_Anim.CA = vQC_Query_Anim.AG:CreateAnimation("Rotation")
+				vQC_Query_Anim.CA:SetDuration(5)
+				vQC_Query_Anim.CA:SetDegrees(360)
+		vQC_Query_Anim:Hide()
 ------------------------------------------------------------------------
 -- Fire Up Events
 ------------------------------------------------------------------------
@@ -955,13 +1256,47 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle)
 		SLASH_QC1, SLASH_QC2 = '/qc', '/qchecker'
-		SlashCmdList["QC"] = WatchQLogAct(0)
-		vQC_Main:Hide()
+		SlashCmdList["QC"] = QCOpen
 		vQC_StoryMain:Hide()
 		vQC_MiniQ:Hide()
 		vQC_MiniW:Hide()
+		vQC_Main:Hide()
+		vQC_WBMain:Hide()
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
 	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
 	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
 end)
+------------------------------------------------------------------------
+-- Debugging Only
+------------------------------------------------------------------------
+-- DEBUG if needed
+	--local TestNbr = 11
+	local DEBUG = false
+	function DeOutput(str)
+		str = tostring(str)
+		for _,name in pairs(CHAT_FRAMES) do
+		   local frame = _G[name]
+		   if frame.name == "DEBUGWindow" then -- You Need DEBUGWindow (ChatFrame) to view debugs
+				frame:AddMessage(date("%H:%M.%S").." "..str)
+		   end
+		end
+	end
+------------------------------------------------------------------------
+-- Debug Quest # Randomonizer
+------------------------------------------------------------------------
+if DEBUG then
+	local vQC_DebugIcon = CreateFrame("Button", "vQC_DebugIcon", vQC_ATTTitle)
+		vQC_DebugIcon:SetSize(24, 24)
+		vQC_DebugIcon:SetNormalTexture("Interface\\GLUES\\CharacterSelect\\CharacterUndelete")
+		vQC_DebugIcon:ClearAllPoints()
+			if LeftRightATT == "LEFT" then
+				vQC_DebugIcon:SetPoint("RIGHT", vQC_ATTTitle, 0, 0)
+			elseif LeftRightATT == "RIGHT" then
+				vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
+			end
+		vQC_DebugIcon:SetScript("OnClick", function()
+			vQC_QuestID:SetNumber(math.random(70000))
+			CheckQuestAPI()
+		end)
+end
