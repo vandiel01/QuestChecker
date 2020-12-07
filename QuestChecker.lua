@@ -336,21 +336,27 @@ end
 ------------------------------------------------------------------------
 function WatchQLogAct(arg)
 	if DEBUG then DeOutput("WatchQLogAct") end
+
+	if vQC_QuestID:GetNumber() == 0 then
+		vQC_NoResultsFound:Hide()
+		vQC_YesResultsFound:Hide()
+	end
+	
 	if arg == 0 then
-		if vQC_QuestID:GetNumber() == 0 or TestNbr ~= "" then
-			vQC_NoResultsFound:Hide()
-			vQC_YesResultsFound:Hide()
-		end
 		if vQC_Main:IsVisible() then
 			vQC_Main:Hide()
 		else
-			if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
 			vQC_Main:Show()
 			-- Keep For Holiday Modification Later
 			-- TopRow = math.random(0,5)*64
 			-- vQC_ATTTitle.Icon:SetTexCoord(TopRow/512, (TopRow+64)/512, 0/64, 64/64)
 		end
 		return
+	end
+	if arg == 1 then
+		if QuestMapFrame.DetailsFrame:IsVisible() or QuestFrame:IsVisible() then
+			if not vQC_Main:IsVisible() then vQC_Main:Show() end
+		end
 	end
 	
 	local questID = GetQuestID()
@@ -642,7 +648,8 @@ function ToolTipsOnly(f)
 	end
 	if f == vQC_WBMapB then msg = vQC_WBMapB:GetText() end
 	if f == vQC_MiniMap then msg = vQC_AppTitle end
-	if f == vQC_MiniQ or f == vQC_MiniW then msg = "Quest ID\n\nCheck the Quest." end
+	if f == vQC_MiniQ then msg = "Quest ID: "..Colors(2,vQC_MiniQ.Text:GetText()).."\n\nClick to check Quest." end
+	if f == vQC_MiniW then msg = "Quest ID: "..Colors(2,vQC_MiniW.Text:GetText()).."\n\nClick to check Quest." end
 	if f == vQC_MapPinIcon then msg = "Pin coord to the map" end
 	if f == vQC_Quest_MemIcon then msg = Colors(6,"Current: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb"))) end
 	GameTooltip:AddLine(msg,1,1,1,1)
@@ -793,7 +800,7 @@ end
 				vQC_QFIcon:SetSize(16,16)
 				vQC_QFIcon:SetNormalTexture("Interface\\GossipFrame\\AvailableQuestIcon")
 				vQC_QFIcon:SetPoint("RIGHT", vQC_MiniQ, -5, 0)
-				vQC_QFIcon:SetScript("OnClick", function() WatchQLogAct() end)
+				vQC_QFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
 				vQC_QFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniQ) end)
 				vQC_QFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 				
@@ -810,7 +817,7 @@ end
 				vQC_WFIcon:SetSize(16,16)
 				vQC_WFIcon:SetNormalTexture("Interface\\GossipFrame\\AvailableQuestIcon")
 				vQC_WFIcon:SetPoint("RIGHT", vQC_MiniW, -5, 0)
-				vQC_WFIcon:SetScript("OnClick", function() WatchQLogAct() end)
+				vQC_WFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
 				vQC_WFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniW) end)
 				vQC_WFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 ------------------------------------------------------------------------
@@ -1262,6 +1269,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		vQC_MiniW:Hide()
 		vQC_Main:Hide()
 		vQC_WBMain:Hide()
+		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
 	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
