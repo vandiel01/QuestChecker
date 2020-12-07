@@ -231,11 +231,11 @@ function WorldBossCheck()
 
 			if _G["vMa"..WBQu] == nil then
 				local vMa = CreateFrame("Frame","vMa"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-					vMa:SetBackdrop(Backdrop_NBgnd)
-					vMa:SetSize(25,25)
+	--				vMa:SetBackdrop(Backdrop_NBgnd)
+					vMa:SetSize(22,22)
 					vMa:SetPoint("TOPLEFT",vQC_WBMain,4,HdrPos)
 					local vMaB = CreateFrame("Button","vMaB"..WBQu, _G["vMa"..WBQu])
-						vMaB:SetSize(24,24)
+						vMaB:SetSize(20,20)
 						vMaB:SetPoint("CENTER", "vMa"..WBQu, "CENTER", 0, 0)		
 						vMaB:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
 						vMaB:SetScript("OnClick", function()
@@ -260,23 +260,23 @@ function WorldBossCheck()
 			end
 			if _G["vQu"..WBQu] == nil then
 				local vQu = CreateFrame("Frame","vQu"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-					vQu:SetBackdrop(Backdrop_NBgnd)
-					vQu:SetSize(25,25)
-					vQu:SetPoint("TOPLEFT",vQC_WBMain,26,HdrPos)
+	--				vQu:SetBackdrop(Backdrop_NBgnd)
+					vQu:SetSize(22,22)
+					vQu:SetPoint("TOPLEFT",vQC_WBMain,22,HdrPos)
 						vQu.Bkgnd = vQu:CreateTexture(nil, "OVERLAY")
-						vQu.Bkgnd:SetSize(19,19)
-						vQu.Bkgnd:SetPoint("CENTER", "vQu"..WBQu, "CENTER", 0, 0)
+						vQu.Bkgnd:SetSize(16,16)
+						vQu.Bkgnd:SetPoint("CENTER", "vQu"..WBQu, "CENTER", 1, 0)
 						vQu.Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
 			else
 				_G["vQu"..WBQu].Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
 			end
 			if _G["vBI"..WBQu] == nil then
 				local vBI = CreateFrame("Frame","vBI"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-					vBI:SetBackdrop(Backdrop_NBgnd)
-					vBI:SetSize(25,25)
-					vBI:SetPoint("TOPLEFT",vQC_WBMain,48,HdrPos)
+	--				vBI:SetBackdrop(Backdrop_NBgnd)
+					vBI:SetSize(22,22)
+					vBI:SetPoint("TOPLEFT",vQC_WBMain,43,HdrPos)
 					local vBIB = CreateFrame("Button","vBIB"..WBQu, _G["vBI"..WBQu])
-						vBIB:SetSize(19,19)
+						vBIB:SetSize(16,16)
 						vBIB:SetPoint("CENTER", "vBI"..WBQu, "CENTER", 0, 0)		
 						vBIB:SetNormalTexture(string.sub(ReuseIcons[7], 3, -6))
 						vBIB:SetScript("OnClick", function()
@@ -299,9 +299,9 @@ function WorldBossCheck()
 			end
 			if _G["vBN"..WBQu] == nil then
 				local vBN = CreateFrame("Frame","vBN"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-					vBN:SetBackdrop(Backdrop_NBgnd)
-					vBN:SetSize(223,25)
-					vBN:SetPoint("TOPLEFT",vQC_WBMain,70,HdrPos)
+	--				vBN:SetBackdrop(Backdrop_NBgnd)
+					vBN:SetSize(225,22)
+					vBN:SetPoint("TOPLEFT",vQC_WBMain,63,HdrPos)
 						vBN.Text = vBN:CreateFontString("T")
 						vBN.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
 						vBN.Text:SetPoint("LEFT", "vBN"..WBQu, 6, 0)
@@ -309,22 +309,22 @@ function WorldBossCheck()
 			end
 			if _G["vTL"..WBQu] == nil then
 				local vTL = CreateFrame("Frame","vTL"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-					vTL:SetBackdrop(Backdrop_NBgnd)
-					vTL:SetSize(120,25)
-					vTL:SetPoint("TOPLEFT",vQC_WBMain,290,HdrPos)
+	--				vTL:SetBackdrop(Backdrop_NBgnd)
+					vTL:SetSize(105,22)
+					vTL:SetPoint("TOPLEFT",vQC_WBMain,286,HdrPos)
 						vTL.Text = vTL:CreateFontString("vTLT"..WBQu)
 						vTL.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
-						vTL.Text:SetPoint("CENTER", "vTL"..WBQu, "CENTER", 0, 0)
+						vTL.Text:SetPoint("CENTER", "vTL"..WBQu, 1, 0)
 						vTL.Text:SetText(Colors(4,CDT(TimeLeft)))
 				if vTL.Text:GetText() == "---" then TimerDash = true end
 			else
 				_G["vTLT"..WBQu]:SetText(Colors(4,CDT(TimeLeft)))
 			end
-			HdrPos = HdrPos - 22
+			HdrPos = HdrPos - 20
 			TableRowCount = TableRowCount + 1 -- # of ACTUAL Frame Generated, not the Total # of Boss
 		end
 	end
-	vQC_WBMain:SetSize(413,((22*TableRowCount)+31)) --Fix Height of World Boss once everything is displayed properly
+	vQC_WBMain:SetSize(394,((20.1*TableRowCount)+29)) --Fix Height of World Boss once everything is displayed properly
 	vQC_WBMain.Bkgnd:SetSize(vQC_WBMain:GetWidth()-6,vQC_WBMain:GetHeight()-6) --Fix BG with the Main's resize
 	if TimerDash == true then
 		TimerDash = false
@@ -1150,7 +1150,7 @@ end
 	-- WorldBoss Frame
 	local vQC_WBMain = CreateFrame("Frame", "vQC_WBMain", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_WBMain:SetBackdrop(Backdrop_NBgnd)
-		vQC_WBMain:SetSize(413,100)
+		vQC_WBMain:SetSize(394,100)
 		vQC_WBMain:ClearAllPoints()
 		vQC_WBMain:SetPoint("CENTER", UIParent, 0, 0)
 		vQC_WBMain:EnableMouse(true)
@@ -1160,9 +1160,10 @@ end
 		vQC_WBMain:SetScript("OnDragStop", function() vQC_WBMain:StopMovingOrSizing() end)
 			vQC_WBMain.Bkgnd = vQC_WBMain:CreateTexture(nil, "BACKGROUND")
 			vQC_WBMain.Bkgnd:SetSize(vQC_WBMain:GetWidth()-6,vQC_WBMain:GetHeight()-6)
-			vQC_WBMain.Bkgnd:SetPoint("TOPLEFT", vQC_WBMain, 3, 0)
+			vQC_WBMain.Bkgnd:SetPoint("TOPLEFT", vQC_WBMain, 3, -3)
 			vQC_WBMain.Bkgnd:SetTexture("Interface\\Artifacts\\ArtifactUI"..WBMainBG[math.random(#WBMainBG)])
 			vQC_WBMain.Bkgnd:SetTexCoord(0, 0, 0, 0.390, 0.585, 0, 0.585, 0.390)
+			
 	local vQC_WBTitle = CreateFrame("Frame", "vQC_WBTitle", vQC_WBMain, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_WBTitle:SetBackdrop(Backdrop_B)
 		vQC_WBTitle:SetSize(vQC_WBMain:GetWidth()-6,24)
