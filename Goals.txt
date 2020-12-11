@@ -1,4 +1,4 @@
-If you like something else here, please do lemme know.. Open an issue with "Ench Idea" and MAYBE i'd be able to do something about it.
+If you like something else here, please do lemme know.. Open an issue with "Enchanced Idea" and MAYBE i'd be able to do something about it.
 
 Other thought I had in mind:
 1. List of  Completed Quest that game has to offer by # Order or Quest Name or Zone name? (an idea)
@@ -8,7 +8,8 @@ Other thought I had in mind:
 ------------------------------------------------------------------------
 -- Area to Focus/Fix/Feature Soon
 ------------------------------------------------------------------------
--- Fix the current Storyline crappy method where the row is neater and able to click to acquire more information
+--Add Configurations for Font, Color, Detach, Don't Show, etc.. Soon™
+
 --Still in Air....
 	--Maybe Detect Invasion/Warfront Timer?
 	--Legion Az 1187, Val 1188, HM 1189, St 1190
@@ -19,12 +20,13 @@ Other thought I had in mind:
 ------------------------------------------------------------------------
 -- Partial Fixed But Not Done
 ------------------------------------------------------------------------
--- Fixed the current Storyline crappy method but need to fix rows to be able to click to acquire more info
 -- List a World Boss Quickly, But need to sort Level, Faction and Quest to unlock
 
 ------------------------------------------------------------------------
 -- Completed
 ------------------------------------------------------------------------
+-- Fix the current Storyline crappy method where the row is neater and able to click to acquire more information
+-- Fixed the current Storyline crappy method but need to fix rows to be able to click to acquire more info
 -- Remove Check Button since you can press Enter to Query.
 -- Remove "Quest ID" since its all about QuestLog Query
 -- List a World Boss Quickly

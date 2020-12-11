@@ -22,12 +22,13 @@ You can also contribute to the addon by [Donate] https://paypal.me/Vandiel01
 	-Any new reasonable ideas are welcome :)
 
 ## Image Samples
-###### New
+###### New 2.3
+![QCSample1](Images/2.3_Image1.png)
+
+###### Old
 ![QCSample1](Images/NImage1.png)
 ![QCSample1](Images/NImage2.png)
 ![QCSample1](Images/NImage3.png)
-
-###### Old
 ###### Normal Frame w/ AllTheThings Installed
  ![QCSample1](Images/Image1.png)
 ###### Normal Frame w/ AllTheThings Installed
