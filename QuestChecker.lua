@@ -1,4 +1,29 @@
-﻿local Revision = "12062020_195300" --Ignore, its for my Debugging Purpose :)
+﻿local Revision = "12102020_215400" --Ignore, its for my Debugging Purpose :)
+------------------------------------------------------------------------
+-- Debugging Only
+------------------------------------------------------------------------
+-- DEBUG if needed
+	local DEBUG = false
+	if DEBUG then local TestNbr = 25588 end
+	local DeOutput = function(str, ...)
+		local str = tostring(str)
+		local arr = { ... }
+		if #arr > 0 then
+			for i, v in ipairs(arr) do
+				str = str .. ", " .. v
+			end
+		end
+		for _,name in pairs(CHAT_FRAMES) do
+		   local frame = _G[name]
+		   if frame.name == "DEWin" then -- You Need DEBUGWindow (ChatFrame) to view debugs
+				if IsAddOnLoaded("Prat-3.0") then
+					frame:AddMessage(str)
+				else
+					frame:AddMessage(date("%H:%M.%S").." "..str)
+				end
+		   end
+		end
+	end
 ----------------------------------------------------------------------------------------------------
                         --- AllTheThings Icon [Thanks to Crieve\Dylan] ---
                   --- AllTheThings Holiday Icon [Thanks to Dead Serious] ---
@@ -76,8 +101,8 @@ local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 ------------------------------------------------------------------------
 -- Table of Frame Backdrops
 ------------------------------------------------------------------------	
-	local CP, Re, TopRow, BotRow, GQL = 1, 0, 0, 0, 0
-	local mapID, StoryID, QC_Mem = 0, 0, 0
+	local CP, Re, TopRow, BotRow, GQL, OldvQCSL, OldWBNbr = 1, 0, 0, 0, 0, 0, 0
+	local mapID, StoryID, QC_Mem, MaxQuestID = 0, 0, 0, 70000
 -- Local Font Size (for Frames)
 	local Font_Lg = 14		--Large Font Size
 	local Font_Md = 12		--Medium Font Size
@@ -93,7 +118,7 @@ local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Titl
 ------------------------------------------------------------------------
 -- World Boss Settings
 ------------------------------------------------------------------------
-	local WBMainBG = { "DeathKnightFrost", "DemonHunter", "Druid", "Hunter", "MageArcane", "Monk", "Paladin", "Priest", "PriestShadow", "Rogue", "Shaman", "Warlock", 	"Warrior", } -- Change Background when World Boss Screen is Opened
+	local WBMainBG = { "DeathKnightFrost", "DemonHunter", "Druid", "Hunter", "MageArcane", "Monk", "Paladin", "Priest", "PriestShadow", "Rogue", "Shaman", "Warlock", "Warrior", } -- Change Background when World Boss Screen is Opened
 	local WhatExpac = { "Mists of Pandaria", "Warlords of Dreanor", "Legion", "Battle of Azeroth", "Shadowlands", "","","","","", "Broken Isles (Legion)", "Argus (Legion)", "Nazjatar (BfA)", "Warfront: Arathi Highlands (BfA)", "Warfront: Darkshore (BfA)", "N'Zoth: Uldum (BfA)", "N'Zoth: Vale of Eternal Blossoms (BfA)" }
 	local WorldBossList = {
 	--Mist of Pandaria	
@@ -229,22 +254,22 @@ function WorldBossCheck()
 			local WQActive = ((ExBool and isQFC(WBQu)) and ReuseIcons[6] or (vC_QTask.IsActive(WBQu) and ReuseIcons[6] or ReuseIcons[2]))
 			local QuestFinish = isQFC(WBQu) and ReuseIcons[1] or ReuseIcons[2]
 
-			if _G["vMa"..WBQu] == nil then
-				local vMa = CreateFrame("Frame","vMa"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-	--				vMa:SetBackdrop(Backdrop_NBgnd)
-					vMa:SetSize(22,22)
-					vMa:SetPoint("TOPLEFT",vQC_WBMain,4,HdrPos)
-					local vMaB = CreateFrame("Button","vMaB"..WBQu, _G["vMa"..WBQu])
-						vMaB:SetSize(20,20)
-						vMaB:SetPoint("CENTER", "vMa"..WBQu, "CENTER", 0, 0)		
-						vMaB:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
-						vMaB:SetScript("OnClick", function()
-							if ExBool then MakePins(WBZo,WBXc,WBYc,WBNa) else isAdd(WBQu) end
+			if _G["vWBMa"..i] == nil then
+				local vWBMa = CreateFrame("Frame","vWBMa"..i,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+	--				vWBMa:SetBackdrop(Backdrop_NBgnd)
+					vWBMa:SetSize(22,22)
+					vWBMa:SetPoint("TOPLEFT",vQC_WBMain,4,HdrPos)
+					local vWBMaB = CreateFrame("Button","vWBMaB"..i, _G["vWBMa"..i])
+						vWBMaB:SetSize(20,20)
+						vWBMaB:SetPoint("CENTER", "vWBMa"..i, "CENTER", 0, 0)		
+						vWBMaB:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
+						vWBMaB:SetScript("OnClick", function()
+							if ExBool then MakePins(WBZo,WBXc,WBYc,WBNa) else isAdd(WBQu,1) end
 						end)
-						vMaB:SetScript("OnEnter", function()
+						vWBMaB:SetScript("OnEnter", function()
 							GameTooltip:ClearLines()
 							GameTooltip:Hide()
-							GameTooltip:SetOwner(_G["vMaB"..WBQu],"ANCHOR_LEFT")
+							GameTooltip:SetOwner(_G["vWBMaB"..i],"ANCHOR_LEFT")
 								vQC_WBTitle.Icon:SetTexture("Interface\\ENCOUNTERJOURNAL\\UI-EJ-BOSS-"..WBIm)
 							GameTooltip:AddLine(WhatExpac[WBEx].."\n\n")
 							GameTooltip:AddDoubleLine("Boss: ",Colors(7,WBNa))
@@ -253,77 +278,94 @@ function WorldBossCheck()
 							GameTooltip:AddLine("\nClick here to:\n"..Colors(2,(ExBool and "Create Map Pin to World Boss" or "Add World Quest Objective")))
 							GameTooltip:Show()
 						end)
-						vMaB:SetScript("OnLeave", function()
+						vWBMaB:SetScript("OnLeave", function()
 							GameTooltip:ClearLines()
 							GameTooltip:Hide()
 						end)
 			end
-			if _G["vQu"..WBQu] == nil then
-				local vQu = CreateFrame("Frame","vQu"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-	--				vQu:SetBackdrop(Backdrop_NBgnd)
-					vQu:SetSize(22,22)
-					vQu:SetPoint("TOPLEFT",vQC_WBMain,22,HdrPos)
-						vQu.Bkgnd = vQu:CreateTexture(nil, "OVERLAY")
-						vQu.Bkgnd:SetSize(16,16)
-						vQu.Bkgnd:SetPoint("CENTER", "vQu"..WBQu, "CENTER", 1, 0)
-						vQu.Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
+			if not _G["vWBMa"..i]:IsVisible() then _G["vWBMa"..i]:Show() end
+			if _G["vWBQu"..i] == nil then
+				local vWBQu = CreateFrame("Frame","vWBQu"..i,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+	--				vWBQu:SetBackdrop(Backdrop_NBgnd)
+					vWBQu:SetSize(22,22)
+					vWBQu:SetPoint("TOPLEFT",vQC_WBMain,22,HdrPos)
+						vWBQu.Bkgnd = vWBQu:CreateTexture(nil, "OVERLAY")
+						vWBQu.Bkgnd:SetSize(16,16)
+						vWBQu.Bkgnd:SetPoint("CENTER", "vWBQu"..i, "CENTER", 1, 0)
+						vWBQu.Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
 			else
-				_G["vQu"..WBQu].Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
+				_G["vWBQu"..i].Bkgnd:SetTexture(string.sub(QuestFinish, 3, -6))
 			end
-			if _G["vBI"..WBQu] == nil then
-				local vBI = CreateFrame("Frame","vBI"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-	--				vBI:SetBackdrop(Backdrop_NBgnd)
-					vBI:SetSize(22,22)
-					vBI:SetPoint("TOPLEFT",vQC_WBMain,43,HdrPos)
-					local vBIB = CreateFrame("Button","vBIB"..WBQu, _G["vBI"..WBQu])
-						vBIB:SetSize(16,16)
-						vBIB:SetPoint("CENTER", "vBI"..WBQu, "CENTER", 0, 0)		
-						vBIB:SetNormalTexture(string.sub(ReuseIcons[7], 3, -6))
-						vBIB:SetScript("OnClick", function()
-							DoNothing("vBI"..WBQu)
-						end)
-						vBIB:SetScript("OnEnter", function()
+			if not _G["vWBQu"..i]:IsVisible() then _G["vWBQu"..i]:Show() end
+			if _G["vWBBi"..i] == nil then
+				local vWBBi = CreateFrame("Frame","vWBBi"..i,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+	--				vWBBi:SetBackdrop(Backdrop_NBgnd)
+					vWBBi:SetSize(22,22)
+					vWBBi:SetPoint("TOPLEFT",vQC_WBMain,43,HdrPos)
+					local vWBBiB = CreateFrame("Button","vWBBiB"..i, _G["vWBBi"..i])
+						vWBBiB:SetSize(16,16)
+						vWBBiB:SetPoint("CENTER", "vWBBi"..i, "CENTER", 0, 0)		
+						vWBBiB:SetNormalTexture(string.sub(ReuseIcons[7], 3, -6))
+				--		vWBBiB:SetScript("OnClick", function()
+				--			DoNothing("vWBBi"..i)
+				--		end)
+						vWBBiB:SetScript("OnEnter", function()
 							GameTooltip:ClearLines()
 							GameTooltip:Hide()
-							GameTooltip:SetOwner(_G["vBIB"..WBQu],"ANCHOR_CURSOR")
+							GameTooltip:SetOwner(_G["vWBBiB"..i],"ANCHOR_CURSOR")
 							GameTooltip:AddLine("Coming Soon™!\n\nNeed Bonus ID from this NPC: "..Colors(2,WBNa),1,1,1,1)
 							GameTooltip:Show()
 						end)
-						vBIB:SetScript("OnLeave", function()
+						vWBBiB:SetScript("OnLeave", function()
 							GameTooltip:ClearLines()
 							GameTooltip:Hide()
 						end)
 		-- Need Bonus Roll ID before this can be enabled/modified
 		--	else
-		--		_G["vBIB"..WBQu]:SetNormalTexture(string.sub(ReuseIcons[1], 3, -6))
+		--		_G["vWBBiB"..i]:SetNormalTexture(string.sub(ReuseIcons[1], 3, -6))
 			end
-			if _G["vBN"..WBQu] == nil then
-				local vBN = CreateFrame("Frame","vBN"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-	--				vBN:SetBackdrop(Backdrop_NBgnd)
-					vBN:SetSize(225,22)
-					vBN:SetPoint("TOPLEFT",vQC_WBMain,63,HdrPos)
-						vBN.Text = vBN:CreateFontString("T")
-						vBN.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
-						vBN.Text:SetPoint("LEFT", "vBN"..WBQu, 6, 0)
-						vBN.Text:SetText(Colors(4,WBNa))
+			if not _G["vWBBi"..i]:IsVisible() then _G["vWBBi"..i]:Show() end
+			if _G["vWBBN"..i] == nil then
+				local vWBBN = CreateFrame("Frame","vWBBN"..i,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+	--				vWBBN:SetBackdrop(Backdrop_NBgnd)
+					vWBBN:SetSize(225,22)
+					vWBBN:SetPoint("TOPLEFT",vQC_WBMain,63,HdrPos)
+						vWBBN.Text = vWBBN:CreateFontString("T")
+						vWBBN.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
+						vWBBN.Text:SetPoint("LEFT", "vWBBN"..i, 6, 0)
+						vWBBN.Text:SetText(Colors(4,WBNa))
 			end
-			if _G["vTL"..WBQu] == nil then
-				local vTL = CreateFrame("Frame","vTL"..WBQu,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
-	--				vTL:SetBackdrop(Backdrop_NBgnd)
-					vTL:SetSize(105,22)
-					vTL:SetPoint("TOPLEFT",vQC_WBMain,286,HdrPos)
-						vTL.Text = vTL:CreateFontString("vTLT"..WBQu)
-						vTL.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
-						vTL.Text:SetPoint("CENTER", "vTL"..WBQu, 1, 0)
-						vTL.Text:SetText(Colors(4,CDT(TimeLeft)))
-				if vTL.Text:GetText() == "---" then TimerDash = true end
+			if not _G["vWBBN"..i]:IsVisible() then _G["vWBBN"..i]:Show() end
+			if _G["vWBTL"..i] == nil then
+				local vWBTL = CreateFrame("Frame","vWBTL"..i,vQC_WBMain,BackdropTemplateMixin and "BackdropTemplate")
+	--				vWBTL:SetBackdrop(Backdrop_NBgnd)
+					vWBTL:SetSize(105,22)
+					vWBTL:SetPoint("TOPLEFT",vQC_WBMain,286,HdrPos)
+						vWBTL.Text = vWBTL:CreateFontString("vWBTL"..i)
+						vWBTL.Text:SetFont(FontStyle[1], Font_Sm, "OUTLINE")
+						vWBTL.Text:SetPoint("CENTER", "vWBTL"..i, 1, 0)
+						vWBTL.Text:SetText(Colors(4,CDT(TimeLeft)))
+				if vWBTL.Text:GetText() == "---" then TimerDash = true end
 			else
-				_G["vTLT"..WBQu]:SetText(Colors(4,CDT(TimeLeft)))
+				_G["vWBTL"..i]:SetText(Colors(4,CDT(TimeLeft)))
 			end
+			if not _G["vWBTL"..i]:IsVisible() then _G["vWBTL"..i]:Show() end
 			HdrPos = HdrPos - 20
 			TableRowCount = TableRowCount + 1 -- # of ACTUAL Frame Generated, not the Total # of Boss
 		end
 	end
+
+	if (#WorldBossList <= OldWBNbr) then
+		for i = #WorldBossList+1, OldWBNbr do
+			_G["vWBMa"..i]:Hide()
+			_G["vWBQu"..i]:Hide()
+			_G["vWBBi"..i]:Hide()
+			_G["vWBBN"..i]:Hide()
+			_G["vWBTL"..i]:Hide()
+		end
+	end
+	OldWBNbr = #WorldBossList
+
 	vQC_WBMain:SetSize(394,((20.1*TableRowCount)+29)) --Fix Height of World Boss once everything is displayed properly
 	vQC_WBMain.Bkgnd:SetSize(vQC_WBMain:GetWidth()-6,vQC_WBMain:GetHeight()-6) --Fix BG with the Main's resize
 	if TimerDash == true then
@@ -402,7 +444,6 @@ function CheckQuestAPI()
 	vQC_T_XY.Text:SetText("---")
 	vQC_T_SZ.Text:SetText("---")
 	vQC_T_MZ.Text:SetText("---")
-	vQC_SLText:SetText("")
 	Status = xpcall(QueryQuestAPI(), err)
 end
 ------------------------------------------------------------------------
@@ -496,7 +537,6 @@ function GetQuestLineID()
 		vQC_T_XY.Text:SetText("---")
 		vQC_T_SZ.Text:SetText("---")
 		vQC_T_MZ.Text:SetText("---")
-		vQC_SLText:SetText("")
 		AnimToggle(1)
 	end
 	if vQC_T_XY.Text:GetText() == "---" then vQC_MapPinIcon:Hide() else vQC_MapPinIcon:Show() end
@@ -506,44 +546,179 @@ end
 -- Query the Storyline (Need to Fix into Neater Column)
 ------------------------------------------------------------------------
 function ShowChainQuest()
-	if DEBUG then DeOutput("ShowChainQuest "..CP) end
+	if DEBUG then DeOutput("ShowChainQuest") end
 	if not vQC_StoryMain:IsVisible() then
 		GetQuestLineID()
 		return
 	end
-	local vQCSL, tSQC = {}, {}
+
+	local vQCSL = {}
 	if vQC_QuestID:IsEnabled() then ToggleInputs(0) end
 	vQC_Query_Anim.Text:SetText(Colors(7,"0"))
+	
 	wipe(vQCSL)
-	wipe(tSQC)
 	vQCSL = vC_QLine.GetQuestLineQuests(vC_QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())).questLineID)
+	
+	HdrPos = 0
 	for i = 1, #vQCSL do
 		local DidQuest = (vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])
-		local NbrsSeq = i
-		local QuestID = vQCSL[i]
-		local Space = ""
-		if string.len(QuestID) <= 5 then 
-			Space = string.rep(" ",5-tonumber(string.len(QuestID)))
-		end
 		local QuestNa = (vC_QLogs.GetTitleForQuestID(vQCSL[i]) == nil and Colors(1,"Querying Data...") or (vQCSL[i] == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(vQCSL[i]))) or Colors(6,vC_QLogs.GetTitleForQuestID(vQCSL[i])))
+		
+		if _G["vSLIn"..i] == nil then --22/0
+			local vSLIn = CreateFrame("Frame","vSLIn"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
+		--		vSLIn:SetBackdrop(Backdrop_NBgnd)
+				vSLIn:SetSize(22,22)
+				vSLIn:SetPoint("TOPLEFT",vQC_SLContent,0,HdrPos)
+				local vSLInB = CreateFrame("Button","vSLInB"..i, _G["vSLIn"..i])
+					vSLInB:SetSize(16,16)
+					vSLInB:SetPoint("CENTER", "vSLIn"..i, "CENTER", 0, 0)
+					vSLInB:SetNormalTexture("Interface\\FriendsFrame\\InformationIcon")
+					vSLInB:SetScript("OnClick", function()
+						vQC_QuestID:SetNumber(vQCSL[i])
+						CheckQuestAPI()
+					end)
+					vSLInB:SetScript("OnEnter", function()
+						GameTooltip:ClearLines()
+						GameTooltip:Hide()
+						GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
+						GameTooltip:AddLine(vQC_StoryTitle.Text:GetText().."\n\n")
+						GameTooltip:AddDoubleLine("Name: ",Colors(7,QuestNa))
+						GameTooltip:AddDoubleLine("ID: ",Colors(7,vQCSL[i]))
+						GameTooltip:AddLine("\nClick here for more details!")
+						GameTooltip:Show()
+					end)
+					vSLInB:SetScript("OnLeave", function()
+						GameTooltip:ClearLines()
+						GameTooltip:Hide()
+					end)
+		else
+				_G["vSLInB"..i]:SetScript("OnClick", function()
+					vQC_QuestID:SetNumber(vQCSL[i])
+					CheckQuestAPI()
+				end)
+				_G["vSLInB"..i]:SetScript("OnEnter", function()
+					GameTooltip:ClearLines()
+					GameTooltip:Hide()
+					GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
+						GameTooltip:AddLine(vQC_StoryTitle.Text:GetText().."\n\n")
+						GameTooltip:AddDoubleLine("Name: ",Colors(7,QuestNa))
+						GameTooltip:AddDoubleLine("ID: ",Colors(7,vQCSL[i]))
+						GameTooltip:AddLine("\nClick here for more details!")
+					GameTooltip:Show()
+				end)
+				_G["vSLInB"..i]:SetScript("OnLeave", function()
+					GameTooltip:ClearLines()
+					GameTooltip:Hide()
+				end)
+		end
+		_G["vSLInB"..i]:Show()
+		if strfind(QuestNa,"Querying Data...") then _G["vSLInB"..i]:Hide() end
+		
+		if not _G["vSLIn"..i]:IsVisible() then _G["vSLIn"..i]:Show() end
+		if _G["vSLi"..i] == nil then --34/22
+			local vSLi = CreateFrame("Frame","vSLi"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
+		--		vSLi:SetBackdrop(Backdrop_NBgnd)
+				vSLi:SetSize(34,22)
+				vSLi:SetPoint("TOPLEFT",vQC_SLContent,20,HdrPos)
+					vSLi.Text = vSLi:CreateFontString("vSLi"..i)
+					vSLi.Text:SetFont(FontStyle[1], Font_Sm)
+					vSLi.Text:SetPoint("RIGHT", "vSLi"..i, -4, 0)
+					vSLi.Text:SetText(Colors(6,i))
+		else
+			_G["vSLi"..i].Text:SetText(Colors(6,i))
+		end
+		if not _G["vSLi"..i]:IsVisible() then _G["vSLi"..i]:Show() end
+		if _G["vSLDo"..i] == nil then --22/56
+			local vSLDo = CreateFrame("Frame","vSLDo"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
+		--		vSLDo:SetBackdrop(Backdrop_NBgnd)
+				vSLDo:SetSize(22,22)
+				vSLDo:SetPoint("TOPLEFT",vQC_SLContent,53,HdrPos)
+					vSLDo.Icon = vSLDo:CreateTexture(nil, "OVERLAY")
+					vSLDo.Icon:SetSize(16,16)
+					vSLDo.Icon:SetPoint("CENTER", "vSLDo"..i, "CENTER", 0, 0)
+					vSLDo.Icon:SetTexture(string.sub(DidQuest, 3, -6))
 
-		tMsg = string.format("%s %03d %-5s %s %s",DidQuest,NbrsSeq,QuestID,Space,QuestNa)
-		tinsert(tSQC,tMsg)
+		else
+			_G["vSLDo"..i].Icon:SetTexture(string.sub(DidQuest, 3, -6))
+		end
+		if not _G["vSLDo"..i]:IsVisible() then _G["vSLDo"..i]:Show() end
+		if _G["vSLQI"..i] == nil then --56/104
+			local vSLQI = CreateFrame("Frame","vSLQI"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
+		--		vSLQI:SetBackdrop(Backdrop_NBgnd)
+				vSLQI:SetSize(56,22)
+				vSLQI:SetPoint("TOPLEFT",vQC_SLContent,74,HdrPos)
+					vSLQI.Text = vSLQI:CreateFontString("vSLQI"..i)
+					vSLQI.Text:SetFont(FontStyle[1], Font_Sm)
+					vSLQI.Text:SetPoint("LEFT", "vSLQI"..i, 5, 0)
+					vSLQI.Text:SetText(Colors(6,vQCSL[i]))
+		else
+			_G["vSLQI"..i].Text:SetText(Colors(6,vQCSL[i]))
+		end
+		if not _G["vSLQI"..i]:IsVisible() then _G["vSLQI"..i]:Show() end
+		if _G["vSLQN"..i] == nil then --163/160
+			local vSLQN = CreateFrame("Frame","vSLQN"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
+		--		vSLQN:SetBackdrop(Backdrop_NBgnd)
+				vSLQN:SetSize(139,22)
+				vSLQN:SetPoint("TOPLEFT",vQC_SLContent,129,HdrPos)
+					vSLQN.Text = vSLQN:CreateFontString("vSLQN"..i)
+					vSLQN.Text:SetFont(FontStyle[1], Font_Sm)
+					vSLQN.Text:SetPoint("LEFT", "vSLQN"..i, 5, 0)
+					vSLQN.Text:SetText(QuestNa)
+		else
+			_G["vSLQN"..i].Text:SetText(QuestNa)
+		end
+		if not _G["vSLQN"..i]:IsVisible() then _G["vSLQN"..i]:Show() end
+		
+		HdrPos = HdrPos - 20
 	end
-	CP = CP + 1
-	if type(tSQC) == "table" then tSQC = table.concat(tSQC,"\n") end
-	vQC_SLText:SetText(tSQC)
-	if strfind(vQC_SLText:GetText(),"Querying Data...") and CP < 6 then
-		vQC_ShowChainQuest_Timer = C_Timer.NewTimer(2, ShowChainQuest)
-		vQC_Query_Anim.Text:SetText(Colors(7,CP))
-		return
-	else
-		vQC_SLText:SetText(string.gsub(vQC_SLText:GetText(),"Querying Data...","Server Failed to Response..."))
+	for i = 1, #vQCSL do
+		if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") then Status = xpcall(TryQueryAgain(i,vQCSL[i]),err) end
 	end
+	if (#vQCSL <= OldvQCSL) then
+		for i = #vQCSL+1, OldvQCSL do
+			_G["vSLIn"..i]:Hide()
+			_G["vSLi"..i]:Hide()
+			_G["vSLDo"..i]:Hide()
+			_G["vSLQI"..i]:Hide()
+			_G["vSLQN"..i]:Hide()
+		end
+	end
+	OldvQCSL = #vQCSL
+	
 	AnimToggle(1)
 	ToggleInputs(1)
-	CP = 0
 	Status = xpcall(WatchMemoryCount(), err) --Clean up After Storyline Query
+end
+------------------------------------------------------------------------
+-- Query Again if still have "Querying Data"
+------------------------------------------------------------------------
+function TryQueryAgain(i,q)
+	if DEBUG then DeOutput("Working",i,q) end
+	local tVar = _G["vSLQN"..i].Text:GetText()
+	tVar = C_Timer.NewTicker(
+		1,
+		function()
+			if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") or strfind(_G["vSLQN"..i].Text:GetText(),"Server Failed to Response...") then _G["vSLInB"..i]:Hide() else _G["vSLInB"..i]:Show() end
+			if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") and tVar._remainingIterations == 1 then
+				_G["vSLQN"..i].Text:SetText(string.gsub(_G["vSLQN"..i].Text:GetText(),"Querying Data...","Server Failed to Response..."))
+				_G["vSLInB"..i]:Hide()
+			end
+			if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") then
+				_G["vSLQN"..i].Text:SetText(vC_QLogs.GetTitleForQuestID(q) == nil and Colors(1,"Querying Data...") or (q == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(q))) or Colors(6,vC_QLogs.GetTitleForQuestID(q)))
+				_G["vSLInB"..i]:SetScript("OnEnter", function()
+					GameTooltip:ClearLines()
+					GameTooltip:Hide()
+					GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
+						GameTooltip:AddLine(vQC_StoryTitle.Text:GetText().."\n\n")
+						GameTooltip:AddDoubleLine("Name: ",Colors(7,QuestNa))
+						GameTooltip:AddDoubleLine("ID: ",Colors(7,vQCSL[i]))
+						GameTooltip:AddLine("\nClick here for more details!")
+					GameTooltip:Show()
+				end)
+			end
+			if not strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") then tVar:Cancel() end
+		end,
+		5)
 end
 ------------------------------------------------------------------------
 -- Query Information from AllTheThings SavedVariables
@@ -627,8 +802,8 @@ function WatchMemoryCount()
 	if QC_Mem > 1024 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Red") end
 	if QC_Mem < 1024 and QC_Mem > 512 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Yellow") end
 	if QC_Mem < 512 and QC_Mem > 151 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green") end
-	if QC_Mem > 2048 and not InCombatLockdown() then
-		print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2)..Colors(6,"Dumping Mem: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb"))))
+	if QC_Mem > 1024 and not InCombatLockdown() then
+		if DEBUG then print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2)..Colors(6,"Dumping Mem: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb")))) end
 		collectgarbage("collect")
 		vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green")
 	end
@@ -663,11 +838,11 @@ function QuestUpDown(arg)
 	local QNbr = vQC_QuestID:GetNumber()
 	if arg == 1 then 
 		QNbr = QNbr + 1
-		if QNbr >= 70000 then QNbr = 0 end
+		if QNbr >= MaxQuestID then QNbr = 0 end
 	end
 	if arg == 0 then
 		QNbr = QNbr - 1
-		if QNbr == -1 then QNbr = 70000 end
+		if QNbr == -1 then QNbr = MaxQuestID end
 	end
 	vQC_QuestID:SetNumber(QNbr)
 	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
@@ -1041,7 +1216,7 @@ end
 -- Storyline Main
 	local vQC_StoryMain = CreateFrame("Frame", "vQC_StoryMain", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_StoryMain:SetBackdrop(Backdrop_A)
-		vQC_StoryMain:SetSize(vQC_Main:GetWidth(),150)
+		vQC_StoryMain:SetSize(vQC_Main:GetWidth(),250)
 		vQC_StoryMain:ClearAllPoints()
 		vQC_StoryMain:SetPoint("BOTTOM", vQC_Main, 0, 0-vQC_StoryMain:GetHeight()+4)
 		vQC_StoryMain:EnableMouse(true)
@@ -1049,7 +1224,7 @@ end
 		vQC_StoryMain:RegisterForDrag("LeftButton")
 		vQC_StoryMain:SetScript("OnDragStart", function() vQC_Main:StartMoving() end)
 		vQC_StoryMain:SetScript("OnDragStop", function() vQC_Main:StopMovingOrSizing() end)
-		vQC_StoryMain:Hide()
+		--vQC_StoryMain:Hide()
 -- Storyline Title
 	local vQC_StoryTitle = CreateFrame("Frame", "vQC_StoryTitle", vQC_StoryMain, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_StoryTitle:SetBackdrop(Backdrop_B)
@@ -1062,20 +1237,18 @@ end
 			vQC_StoryTitle.Text:SetText(Colors(4,"---"))
 -- Storyline Results
 	local vQC_SLResult = CreateFrame("Frame", "vQC_SLResult", vQC_StoryMain, BackdropTemplateMixin and "BackdropTemplate")
-		vQC_SLResult:SetSize(vQC_StoryMain:GetWidth()-5,vQC_StoryMain:GetHeight()-33)
+		vQC_SLResult:SetSize(vQC_StoryMain:GetWidth()-2,vQC_StoryMain:GetHeight()-vQC_StoryTitle:GetHeight()-2)
 		vQC_SLResult:ClearAllPoints()
 		vQC_SLResult:SetPoint("TOP", vQC_StoryTitle, 0, 0-vQC_StoryTitle:GetHeight()+3)
-			local vQC_SLScroll = CreateFrame("ScrollFrame", "vQC_SLScroll", vQC_SLResult, "UIPanelScrollFrameTemplate")
-				vQC_SLScroll:SetSize(vQC_SLResult:GetWidth()-30,vQC_SLResult:GetHeight()-5)
-				vQC_SLScroll:SetPoint("TOPLEFT", vQC_SLResult, 5, -5)
-					vQC_SLText = CreateFrame("EditBox", "vQC_SLText", vQC_SLScroll)
-					vQC_SLText:SetWidth(600)
-					vQC_SLText:SetFont(FontStyle[1], Font_Sm)
-					vQC_SLText:SetAutoFocus(false)
-					vQC_SLText:SetMultiLine(true)
-					vQC_SLText:EnableMouse(true)
-					vQC_SLText:SetText("")
-				vQC_SLScroll:SetScrollChild(vQC_SLText)
+		local vQC_SLResultScFr = CreateFrame("ScrollFrame", "vQC_SLResultScFr", vQC_SLResult, "UIPanelScrollFrameTemplate")
+			vQC_SLResultScFr:ClearAllPoints()
+			vQC_SLResultScFr:SetSize(vQC_SLResult:GetWidth()-33,vQC_SLResult:GetHeight()-11)
+			vQC_SLResultScFr:SetPoint("TOPLEFT", vQC_SLResult, 5, -6)
+			vQC_SLResult.vQC_SLResultScFr = vQC_SLResultScFr
+		local vQC_SLContent = CreateFrame("Frame", "vQC_SLContent", vQC_SLResultScFr, BackdropTemplateMixin and "BackdropTemplate")
+			vQC_SLContent:SetSize(1,1)
+			vQC_SLContent.Content = vQC_SLContent
+			vQC_SLResultScFr:SetScrollChild(vQC_SLContent)
 ------------------------------------------------------------------------
 -- ATT Window
 ------------------------------------------------------------------------
@@ -1136,17 +1309,17 @@ end
 				vQC_ATTArea:SetMultiLine(true)
 				vQC_ATTArea:EnableMouse(false)
 			vQC_ATTRScr:SetScrollChild(vQC_ATTArea)
-			
 ------------------------------------------------------------------------
 -- For World Boss Window
 ------------------------------------------------------------------------	
 	--World Boss Icon
 	local vQC_MainWBIcon = CreateFrame("Button", "vQC_MainWBIcon", vQC_Main)
-		vQC_MainWBIcon:SetSize(42,42)
-		vQC_MainWBIcon:SetPoint("TOPRIGHT", vQC_Main, -5, -25)
+		vQC_MainWBIcon:SetSize(32,32)
+		vQC_MainWBIcon:SetPoint("TOPRIGHT", vQC_Main, -5, -27)
 		vQC_MainWBIcon:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\DungeonJournal")
 		vQC_MainWBIcon:GetNormalTexture():SetTexCoord(0.29296875, 0.859375, 0.29296875, 0.9375, 0.33203125, 0.859375, 0.33203125, 0.9375)
 		vQC_MainWBIcon:SetScript("OnClick", function() WorldBossCheck() end)
+		
 	-- WorldBoss Frame
 	local vQC_WBMain = CreateFrame("Frame", "vQC_WBMain", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_WBMain:SetBackdrop(Backdrop_NBgnd)
@@ -1254,6 +1427,9 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 			"QUEST_PROGRESS", --ready to turn in quest
 			"QUEST_TURNED_IN", --update QC when quest turned in
 			"QUEST_COMPLETE", --update QC when quest turned in
+			
+			--All To Test Below With Bonus Rolls
+			"BONUS_ROLL_RESULT",
 		}
 		for ev = 1, #TheEvents do
 			vQC_OnUpdate:RegisterEvent(TheEvents[ev])
@@ -1262,7 +1438,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		vQC_OnUpdate:RegisterEvent("PLAYER_LOGIN")
 	end
 	if event == "PLAYER_LOGIN" then
-		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle)
+		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle..(DEBUG and Colors(1," [DEBUG]") or ""))
 		SLASH_QC1, SLASH_QC2 = '/qc', '/qchecker'
 		SlashCmdList["QC"] = QCOpen
 		vQC_StoryMain:Hide()
@@ -1275,22 +1451,12 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	end
 	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
 	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
-end)
-------------------------------------------------------------------------
--- Debugging Only
-------------------------------------------------------------------------
--- DEBUG if needed
-	--local TestNbr = 11
-	local DEBUG = false
-	function DeOutput(str)
-		str = tostring(str)
-		for _,name in pairs(CHAT_FRAMES) do
-		   local frame = _G[name]
-		   if frame.name == "DEBUGWindow" then -- You Need DEBUGWindow (ChatFrame) to view debugs
-				frame:AddMessage(date("%H:%M.%S").." "..str)
-		   end
-		end
+	
+	if events == "BONUS_ROLL_ACTIVATE" then
+		local rewardType, rewardLink, rewardQuantity, rewardSpecID, _, _, currencyID, isSecondaryResult, isCorrupted = ...;
+		print(rewardType, rewardLink, rewardQuantity, rewardSpecID, currencyID, isSecondaryResult, isCorrupted)
 	end
+end)
 ------------------------------------------------------------------------
 -- Debug Quest # Randomonizer
 ------------------------------------------------------------------------
@@ -1305,7 +1471,7 @@ if DEBUG then
 				vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
 			end
 		vQC_DebugIcon:SetScript("OnClick", function()
-			vQC_QuestID:SetNumber(math.random(70000))
+			vQC_QuestID:SetNumber(math.random(MaxQuestID))
 			CheckQuestAPI()
 		end)
 end
