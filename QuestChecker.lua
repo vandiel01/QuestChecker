@@ -768,12 +768,6 @@ function ATTQueryVariables()
 	end
 end
 ------------------------------------------------------------------------
--- Addon Opener (SlashCmd doesn't like Args)
-------------------------------------------------------------------------
-function QCOpen()
-	WatchQLogAct(0)
-end
-------------------------------------------------------------------------
 -- Color Choice
 ------------------------------------------------------------------------
 function Colors(c,t)
@@ -887,7 +881,7 @@ end
 ------------------------------------------------------------------------
 -- WOWHead Link Display
 ------------------------------------------------------------------------
- local function WHLink()
+local function WHLink()
  	if DEBUG then DeOutput("WHLink") end
 	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
 		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
@@ -1438,9 +1432,39 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		vQC_OnUpdate:RegisterEvent("PLAYER_LOGIN")
 	end
 	if event == "PLAYER_LOGIN" then
-		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle..(DEBUG and Colors(1," [DEBUG]") or ""))
-		SLASH_QC1, SLASH_QC2 = '/qc', '/qchecker'
-		SlashCmdList["QC"] = QCOpen
+		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle..(DEBUG and Colors(1," [DEBUG]") or "")..Colors(2," [/qc ? for Options]"))
+		
+		SLASH_QuestChecker1 = '/qc'
+		SLASH_QuestChecker2 = '/qcheck'
+		SLASH_QuestChecker2 = '/qchecker'
+		SlashCmdList["QuestChecker"] = function(cmd)
+		
+			if string.match(cmd,"%d") then
+				if not vQC_Main:IsVisible() then vQC_Main:Show() end
+				WatchQLogAct()
+				vQC_QuestID:SetNumber(cmd)
+				CheckQuestAPI()
+			else
+				local cmd = string.lower(cmd)
+			
+				if not cmd or cmd == "" then
+					WatchQLogAct(0)
+				elseif cmd == "debug" or cmd == "d" then
+					if DEBUG then DEBUG = false d = "Dis" else DEBUG = true d = "En" end
+					DeOutput("Debug "..d.."abled")
+				elseif cmd == "?" then
+					print(Colors(4,"Command To Use:"))
+					print(Colors(2,"attcheck or a")..Colors(4," - Check Toons/Quest"))
+					print(Colors(2,"debug or d")..Colors(4," - Enable Debugging"))
+					print(Colors(2,"#")..Colors(4," - Put in ## to Pull Quest ID"))
+				elseif cmd == "attcheck" or cmd == "a" then
+					print("Coming Soon")
+				else
+					print("What?  Not sure what you're asking... Try again!")
+				end	
+			end
+		end
+		
 		vQC_StoryMain:Hide()
 		vQC_MiniQ:Hide()
 		vQC_MiniW:Hide()
