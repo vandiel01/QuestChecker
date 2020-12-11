@@ -1,5 +1,4 @@
-﻿local Revision = "12102020_215400" --Ignore, its for my Debugging Purpose :)
-------------------------------------------------------------------------
+﻿------------------------------------------------------------------------
 -- Debugging Only
 ------------------------------------------------------------------------
 -- DEBUG if needed
@@ -31,6 +30,7 @@
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
 local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
+local vQC_Revision = "12112020_132300" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -1436,7 +1436,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		
 		SLASH_QuestChecker1 = '/qc'
 		SLASH_QuestChecker2 = '/qcheck'
-		SLASH_QuestChecker2 = '/qchecker'
+		SLASH_QuestChecker3 = '/qchecker'
 		SlashCmdList["QuestChecker"] = function(cmd)
 		
 			if string.match(cmd,"%d") then
@@ -1452,13 +1452,19 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 				elseif cmd == "debug" or cmd == "d" then
 					if DEBUG then DEBUG = false d = "Dis" else DEBUG = true d = "En" end
 					DeOutput("Debug "..d.."abled")
+				elseif cmd == "attcheck" or cmd == "a" then
+					print("Coming Soon")
+				elseif cmd == "rev" or cmd == "r" then
+					print(vQC_Revision)
+				elseif cmd == "ver" or cmd == "v" then
+					print(vQC_AppTitle)
 				elseif cmd == "?" then
 					print(Colors(4,"Command To Use:"))
 					print(Colors(2,"attcheck or a")..Colors(4," - Check Toons/Quest"))
 					print(Colors(2,"debug or d")..Colors(4," - Enable Debugging"))
+					print(Colors(2,"rev or r")..Colors(4," - Show QC Revision"))
+					print(Colors(2,"ver or v")..Colors(4," - Show QC Version"))
 					print(Colors(2,"#")..Colors(4," - Put in ## to Pull Quest ID"))
-				elseif cmd == "attcheck" or cmd == "a" then
-					print("Coming Soon")
 				else
 					print("What?  Not sure what you're asking... Try again!")
 				end	
