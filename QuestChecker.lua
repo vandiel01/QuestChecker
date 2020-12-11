@@ -1454,16 +1454,13 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 					DeOutput("Debug "..d.."abled")
 				elseif cmd == "attcheck" or cmd == "a" then
 					print("Coming Soon")
-				elseif cmd == "rev" or cmd == "r" then
-					print(vQC_Revision)
 				elseif cmd == "ver" or cmd == "v" then
-					print(vQC_AppTitle)
+					print(vQC_AppTitle.." - "..vQC_Revision)
 				elseif cmd == "?" then
 					print(Colors(4,"Command To Use:"))
 					print(Colors(2,"attcheck or a")..Colors(4," - Check Toons/Quest"))
 					print(Colors(2,"debug or d")..Colors(4," - Enable Debugging"))
-					print(Colors(2,"rev or r")..Colors(4," - Show QC Revision"))
-					print(Colors(2,"ver or v")..Colors(4," - Show QC Version"))
+					print(Colors(2,"ver or v")..Colors(4," - Show QC Version/Revision"))
 					print(Colors(2,"#")..Colors(4," - Put in ## to Pull Quest ID"))
 				else
 					print("What?  Not sure what you're asking... Try again!")
