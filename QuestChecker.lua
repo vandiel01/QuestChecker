@@ -356,7 +356,7 @@ function WorldBossCheck()
 						vWBTL.Text:SetText(Colors(4,CDT(TimeLeft)))
 				if vWBTL.Text:GetText() == "---" then TimerDash = true end
 			else
-				_G["vWBTL"..i]:SetText(Colors(4,CDT(TimeLeft)))
+				_G["vWBTL"..i].Text:SetText(Colors(4,CDT(TimeLeft)))
 			end
 			if not _G["vWBTL"..i]:IsVisible() then _G["vWBTL"..i]:Show() end
 			HdrPos = HdrPos - 20
