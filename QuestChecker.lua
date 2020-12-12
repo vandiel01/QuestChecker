@@ -29,8 +29,8 @@
                         --- WOWHead Icon [Thanks to WOWHead] ---
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
-local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
-local vQC_Revision = "12112020_132300" --Ignore, its for my Debugging Purpose :)
+	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
+	local vQC_Revision = "12112020_132300" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -84,6 +84,14 @@ local vQC_Revision = "12112020_132300" --Ignore, its for my Debugging Purpose :)
 		edgeSize = 16,
 		insets = { left = 4, right = 4, top = 4, bottom = 4 }
 	}
+	local Backdrop_C = { --Temp
+		edgeFile = "Interface\\ToolTips\\UI-Tooltip-Border",
+		bgFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Background",
+		tileEdge = true,
+		tileSize = 16,
+		edgeSize = 16,
+		insets = { left = 4, right = 4, top = 4, bottom = 4 }
+	}
 	local Backdrop_NBgnd = {
 		edgeFile = "Interface\\ToolTips\\UI-Tooltip-Border",
 		tileEdge = true,
@@ -98,10 +106,11 @@ local vQC_Revision = "12112020_132300" --Ignore, its for my Debugging Purpose :)
 		edgeSize = 16,
 		insets = { left = 2, right = 2, top = 2, bottom = 2 }
 	}
+	
 ------------------------------------------------------------------------
 -- Table of Frame Backdrops
 ------------------------------------------------------------------------	
-	local CP, Re, TopRow, BotRow, GQL, OldvQCSL, OldWBNbr = 1, 0, 0, 0, 0, 0, 0
+	local CP, Re, TopRow, BotRow, GQL, OldvQCSL, OldWBNbr, myIconPos = 1, 0, 0, 0, 0, 0, 0, 0
 	local mapID, StoryID, QC_Mem, MaxQuestID = 0, 0, 0, 70000
 -- Local Font Size (for Frames)
 	local Font_Lg = 14		--Large Font Size
@@ -613,7 +622,6 @@ function ShowChainQuest()
 		end
 		_G["vSLInB"..i]:Show()
 		if strfind(QuestNa,"Querying Data...") then _G["vSLInB"..i]:Hide() end
-		
 		if not _G["vSLIn"..i]:IsVisible() then _G["vSLIn"..i]:Show() end
 		if _G["vSLi"..i] == nil then --34/22
 			local vSLi = CreateFrame("Frame","vSLi"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
@@ -721,7 +729,7 @@ function TryQueryAgain(i,q)
 		5)
 end
 ------------------------------------------------------------------------
--- Query Information from AllTheThings SavedVariables
+-- Query Information from AllTheThings SavedVariables if Quest Completed
 ------------------------------------------------------------------------
 function ATTQueryVariables()
 	if DEBUG then DeOutput("ATTQueryVariables") end
@@ -766,6 +774,125 @@ function ATTQueryVariables()
 		end
 		vQC_ATTArea:SetText(MInfo) --Main
 	end
+end
+------------------------------------------------------------------------
+-- Query Information from AllTheThings SavedVariable on Character Names
+------------------------------------------------------------------------
+function ATTQueryOnCharChecks()
+
+	local Char = AllTheThings.GetDataMember("Characters",{})
+	local Quest = AllTheThings.GetDataMember("CollectedQuestsPerCharacter",{})
+	local TtlChar, i, HdrPos, TtlQuest = 0, 1, 0, 0
+	local tCCh = {}
+	local TtlQuest, NoTbl = 0, 0
+	wipe(tCCh)
+	
+	for k, v in pairs(Quest) do
+		TtlQuest = 0
+		if type(v) == "table" then
+			for l, w in pairs(Char) do 
+				if l == k then 
+					c = w 
+					break
+				end 
+			end
+			for _ in pairs(v) do
+				TtlQuest = TtlQuest + 1
+			end
+			clr = string.sub(c, 5, 10)
+			c = string.sub(c, 11, -3)
+			ch, re = c:match("([^,]+)-([^,]+)")
+			tinsert(tCCh,{clr, ch, re, k, TtlQuest})
+			--DeOutput(clr, ch, re, k, TtlQuest)
+		else
+			NoTbl = NoTbl + 1
+		end
+	end
+	
+	--table.sort(tCCh, function(a,b) return a[3] < b[3] end) --Server
+	--table.sort(tCCh, function(a,b) return a[2] < b[2] end) --Name
+	--table.sort(tCCh, function(a,b) return a[5] < b[5] end) --Total
+	
+	tinsert(tCCh,{"ffffff","UnNamed","",0,NoTbl})  --For Any UnNamed/No Account Quest Listed
+	
+	for i = 1, #tCCh do
+		local vColor = tCCh[i][1]
+		local vNames = tCCh[i][2]
+		local vRealm = tCCh[i][3]
+		local vGUIDs = tCCh[i][4]
+		local NbrQue = tCCh[i][5]
+	
+		if _G["vCCInd"..i] == nil then --Display Index
+			local vCCInd = CreateFrame("Frame","vCCInd"..i,vQC_CChkBodyOC,BackdropTemplateMixin and "BackdropTemplate")
+		--		vCCInd:SetBackdrop(Backdrop_NBgnd)
+				vCCInd:SetSize(35,22)
+				vCCInd:SetPoint("TOPLEFT",vQC_CChkBodyOC,0,HdrPos)
+					vCCInd.Text = vCCInd:CreateFontString("vCCInd"..i)
+					vCCInd.Text:SetFont(FontStyle[1], Font_Sm)
+					vCCInd.Text:SetPoint("LEFT", "vCCInd"..i, 5, 0)
+					vCCInd.Text:SetText(i)
+		end
+		if _G["vCCMag"..i] == nil then --Clickable Icon w/ GUID Stored
+			local vCCMag = CreateFrame("Frame","vCCMag"..i,vQC_CChkBodyOC,BackdropTemplateMixin and "BackdropTemplate")
+		--		vCCMag:SetBackdrop(Backdrop_NBgnd)
+				vCCMag:SetSize(22,22)
+				vCCMag:SetPoint("TOPLEFT",vQC_CChkBodyOC,33,HdrPos)
+				local vCCMagB = CreateFrame("Button","vCCMagB"..i, _G["vCCMag"..i])
+					vCCMagB:SetSize(16,16)
+					vCCMagB:SetPoint("CENTER", "vCCMag"..i, "CENTER", 0, 0)
+					vCCMagB:SetNormalTexture("Interface\\FriendsFrame\\InformationIcon")
+					vCCMagB:SetText(vGUIDs)
+					vCCMagB:SetScript("OnClick", function() DoNothing() end)
+		end
+		if _G["vCCOnT"..i] == nil then --Am I on This toon?
+			local vCCOnT = CreateFrame("Frame","vCCOnT"..i,vQC_CChkBodyOC,BackdropTemplateMixin and "BackdropTemplate")
+		--		vCCOnT:SetBackdrop(Backdrop_NBgnd)
+				vCCOnT:SetSize(22,22)
+				vCCOnT:SetPoint("TOPLEFT",vQC_CChkBodyOC,53,HdrPos)
+					vCCOnT.Icon = vCCOnT:CreateTexture(nil, "OVERLAY")
+					vCCOnT.Icon:SetSize(16,16)
+					vCCOnT.Icon:SetPoint("CENTER", "vCCOnT"..i, "CENTER", 0, 0)
+					IsItMe = vGUIDs == UnitGUID("player") and ReuseIcons[1] or ""
+					vCCOnT.Icon:SetTexture(string.sub(IsItMe, 3, -6))
+		end
+		if _G["vCCNam"..i] == nil then --Player Name
+			local vCCNam = CreateFrame("Frame","vCCNam"..i,vQC_CChkBodyOC,BackdropTemplateMixin and "BackdropTemplate")
+		--		vCCNam:SetBackdrop(Backdrop_NBgnd)
+				vCCNam:SetSize(110,22)
+				vCCNam:SetPoint("TOPLEFT",vQC_CChkBodyOC,74,HdrPos)
+					vCCNam.Text = vCCNam:CreateFontString("vCCNam"..i)
+					vCCNam.Text:SetFont(FontStyle[1], Font_Sm)
+					vCCNam.Text:SetPoint("LEFT", "vCCNam"..i, 5, 0)
+					vCCNam.Text:SetText("|cFF"..vColor..vNames.."|r")
+		end
+		if _G["vCCSvr"..i] == nil then --Player Server
+			local vCCSvr = CreateFrame("Frame","vCCSvr"..i,vQC_CChkBodyOC,BackdropTemplateMixin and "BackdropTemplate")
+		--		vCCSvr:SetBackdrop(Backdrop_NBgnd)
+				vCCSvr:SetSize(136,22)
+				vCCSvr:SetPoint("TOPLEFT",vQC_CChkBodyOC,182,HdrPos)
+					vCCSvr.Text = vCCSvr:CreateFontString("vCCSvr"..i)
+					vCCSvr.Text:SetFont(FontStyle[1], Font_Sm)
+					vCCSvr.Text:SetPoint("LEFT", "vCCSvr"..i, 5, 0)
+					vCCSvr.Text:SetText(vRealm)
+		end
+		if _G["vCCTtl"..i] == nil then --Total Quest Found
+			local vCCTtl = CreateFrame("Frame","vCCTtl"..i,vQC_CChkBodyOC,BackdropTemplateMixin and "BackdropTemplate")
+		--		vCCTtl:SetBackdrop(Backdrop_NBgnd)
+				vCCTtl:SetSize(50,22)
+				vCCTtl:SetPoint("TOPLEFT",vQC_CChkBodyOC,315,HdrPos)
+					vCCTtl.Text = vCCTtl:CreateFontString("vCCTtl"..i)
+					vCCTtl.Text:SetFont(FontStyle[1], Font_Sm)
+					vCCTtl.Text:SetPoint("LEFT", "vCCTtl"..i, 5, 0)
+					vCCTtl.Text:SetText(NbrQue)
+		end
+		TtlChar = TtlChar + 1
+		i = i + 1
+		HdrPos = HdrPos - 20
+	end
+	vQC_CChkBodyOT.Text:SetText(Colors(7,TtlChar.." Character(s)"))
+	
+	--Who Query On?
+	--vQC_CChkBodyTT.Text:SetText(Colors(4," Query On: ")..Colors(7,"--"))
 end
 ------------------------------------------------------------------------
 -- Color Choice
@@ -881,7 +1008,7 @@ end
 ------------------------------------------------------------------------
 -- WOWHead Link Display
 ------------------------------------------------------------------------
-local function WHLink()
+function WHLink()
  	if DEBUG then DeOutput("WHLink") end
 	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
 		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
@@ -913,8 +1040,7 @@ end
 ------------------------------------------------------------------------
 -- Mini Map Position when Dragging
 ------------------------------------------------------------------------
-local myIconPos = 0
-local function UpdateMiniMapButton()
+function UpdateMiniMapButton()
     local Xpoa, Ypoa = GetCursorPosition()
     local Xmin, Ymin = Minimap:GetLeft(), Minimap:GetBottom()
     Xpoa = Xmin - Xpoa / Minimap:GetEffectiveScale() + 70
@@ -929,6 +1055,24 @@ end
 function DoNothing(f)
 	if DEBUG then DeOutput("Forgot Something Here? ",f) end
 	--I mean, it's obvious isn't it?
+end
+------------------------------------------------------------------------
+-- Debug Quest # Randomonizer
+------------------------------------------------------------------------
+if DEBUG then
+	local vQC_DebugIcon = CreateFrame("Button", "vQC_DebugIcon", vQC_ATTTitle)
+		vQC_DebugIcon:SetSize(24, 24)
+		vQC_DebugIcon:SetNormalTexture("Interface\\GLUES\\CharacterSelect\\CharacterUndelete")
+		vQC_DebugIcon:ClearAllPoints()
+			if LeftRightATT == "LEFT" then
+				vQC_DebugIcon:SetPoint("RIGHT", vQC_ATTTitle, 0, 0)
+			elseif LeftRightATT == "RIGHT" then
+				vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
+			end
+		vQC_DebugIcon:SetScript("OnClick", function()
+			vQC_QuestID:SetNumber(math.random(MaxQuestID))
+			CheckQuestAPI()
+		end)
 end
 ------------------------------------------------------------------------
 -- Mini Map Button
@@ -989,6 +1133,132 @@ end
 				vQC_WFIcon:SetScript("OnClick", function() WatchQLogAct(1) end)
 				vQC_WFIcon:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniW) end)
 				vQC_WFIcon:SetScript("OnLeave", function() ToolTipsOnly(0) end)
+------------------------------------------------------------------------
+-- ATT Character Check
+------------------------------------------------------------------------
+-- ATT Character Check Frame
+	local vQC_CChk = CreateFrame("Frame", "vQC_CChk", UIParent, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_CChk:SetBackdrop(Backdrop_A)
+		vQC_CChk:SetSize(600,400)
+		vQC_CChk:ClearAllPoints()
+		vQC_CChk:SetPoint("CENTER", UIParent)
+		vQC_CChk:EnableMouse(true)
+		vQC_CChk:SetMovable(true)
+		vQC_CChk:RegisterForDrag("LeftButton")
+		vQC_CChk:SetScript("OnDragStart", function() vQC_CChk:StartMoving() end)
+		vQC_CChk:SetScript("OnDragStop", function() vQC_CChk:StopMovingOrSizing() end)
+		vQC_CChk:SetClampedToScreen(true)
+-- ATT Character Check Title
+	local vQC_CChkTitle = CreateFrame("Frame", "vQC_CChkTitle", vQC_CChk, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_CChkTitle:SetBackdrop(Backdrop_B)
+		vQC_CChkTitle:SetSize(vQC_CChk:GetWidth()-9,24)
+		vQC_CChkTitle:ClearAllPoints()
+		vQC_CChkTitle:SetPoint("TOP", vQC_CChk, 0, -3)
+			vQC_CChkTitle.Icon = vQC_CChkTitle:CreateTexture(nil, "ARTWORK")
+			vQC_CChkTitle.Icon:SetSize(54,54)
+			vQC_CChkTitle.Icon:SetPoint("TOPLEFT", vQC_CChkTitle, 5, 30)
+			vQC_CChkTitle.Icon:SetTexture("Interface\\FriendsFrame\\PlusManz-PlusManz")
+			vQC_CChkTitle.Text = vQC_CChkTitle:CreateFontString("T")
+			vQC_CChkTitle.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
+			vQC_CChkTitle.Text:SetPoint("CENTER", vQC_CChkTitle)
+			vQC_CChkTitle.Text:SetText(Colors(4,"ATT Character/Quest Check"))
+		local vQC_CChkTitleX = CreateFrame("Button", "vQC_TitleX", vQC_CChkTitle, "UIPanelCloseButton")
+			vQC_CChkTitleX:SetSize(26,26)
+			vQC_CChkTitleX:SetPoint("RIGHT", vQC_CChkTitle, 0, 0)
+			vQC_CChkTitleX:SetScript("OnClick", function() vQC_CChk:Hide() end)
+
+-- ATT Character Check Body 1 (Character List)
+	local vQC_CChkBodyOT = CreateFrame("Frame", "vQC_CChkBodyOT", vQC_CChk, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_CChkBodyOT:SetBackdrop(Backdrop_B)
+		vQC_CChkBodyOT:SetSize(390,24)
+		vQC_CChkBodyOT:ClearAllPoints()
+		vQC_CChkBodyOT:SetPoint("TOPLEFT", vQC_CChkTitle, 0, -22)
+			vQC_CChkBodyOT.Text = vQC_CChkBodyOT:CreateFontString("T")
+			vQC_CChkBodyOT.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
+			vQC_CChkBodyOT.Text:SetPoint("CENTER", vQC_CChkBodyOT)
+			vQC_CChkBodyOT.Text:SetText(Colors(7,"##")..Colors(4," Character(s)"))
+		local vQC_CChkBodyQ = CreateFrame("Button", "vQC_CChkBodyQ", vQC_CChkBodyOT)
+			vQC_CChkBodyQ:SetSize(24,24)
+			vQC_CChkBodyQ:SetPoint("LEFT", vQC_CChkBodyOT, 0, 0)
+			vQC_CChkBodyQ:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\None")
+			vQC_CChkBodyQ:SetScript("OnClick", function() ATTQueryOnCharChecks() end)
+			
+		local vCCIndA = CreateFrame("Frame","vCCIndA",vQC_CChkBodyOT,BackdropTemplateMixin and "BackdropTemplate")
+			vCCIndA:SetBackdrop(Backdrop_B)
+			vCCIndA:SetSize(35,22)
+			vCCIndA:SetPoint("TOPLEFT",vQC_CChkBodyOT,0,-20)
+				vCCIndA.Text = vCCIndA:CreateFontString("T")
+				vCCIndA.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+				vCCIndA.Text:SetPoint("CENTER", "vCCIndA", 0, 0)
+				vCCIndA.Text:SetText("ID")
+		local vCCNamA = CreateFrame("Frame","vCCNamA",vQC_CChkBodyOT,BackdropTemplateMixin and "BackdropTemplate")
+			vCCNamA:SetBackdrop(Backdrop_B)
+			vCCNamA:SetSize(110,22)
+			vCCNamA:SetPoint("TOPLEFT",vQC_CChkBodyOT,74,-20)
+				vCCNamA.Text = vCCNamA:CreateFontString("T")
+				vCCNamA.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+				vCCNamA.Text:SetPoint("CENTER", "vCCNamA", 0, 0)
+				vCCNamA.Text:SetText("Name")
+		local vCCSvrA = CreateFrame("Frame","vCCSvrA",vQC_CChkBodyOT,BackdropTemplateMixin and "BackdropTemplate")
+			vCCSvrA:SetBackdrop(Backdrop_B)
+			vCCSvrA:SetSize(136,22)
+			vCCSvrA:SetPoint("TOPLEFT",vQC_CChkBodyOT,182,-20)
+				vCCSvrA.Text = vCCSvrA:CreateFontString("T")
+				vCCSvrA.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+				vCCSvrA.Text:SetPoint("CENTER", "vCCSvrA", 0, 0)
+				vCCSvrA.Text:SetText("Realm")
+		local vCCTtlA = CreateFrame("Frame","vCCTtlA",vQC_CChkBodyOT,BackdropTemplateMixin and "BackdropTemplate")
+			vCCTtlA:SetBackdrop(Backdrop_B)
+			vCCTtlA:SetSize(50,22)
+			vCCTtlA:SetPoint("TOPLEFT",vQC_CChkBodyOT,315,-20)
+				vCCTtlA.Text = vCCTtlA:CreateFontString("T")
+				vCCTtlA.Text:SetFont(FontStyle[1], Font_Md, "OUTLINE")
+				vCCTtlA.Text:SetPoint("CENTER", "vCCTtlA", 0, 0)
+				vCCTtlA.Text:SetText("Total")
+			
+	local vQC_CChkBodyO = CreateFrame("Frame", "vQC_CChkBodyO", vQC_CChk, BackdropTemplateMixin and "BackdropTemplate")
+		--vQC_CChkBodyO:SetBackdrop(Backdrop_B)
+		vQC_CChkBodyO:SetSize(vQC_CChkBodyOT:GetWidth(),vQC_CChk:GetHeight()-74)
+		vQC_CChkBodyO:ClearAllPoints()
+		vQC_CChkBodyO:SetPoint("TOPLEFT", vQC_CChk, 4, -68)
+		local vQC_CChkBodyOScFr = CreateFrame("ScrollFrame", "vQC_CChkBodyOScFr", vQC_CChkBodyO, "UIPanelScrollFrameTemplate")
+			vQC_CChkBodyOScFr:ClearAllPoints()
+			vQC_CChkBodyOScFr:SetSize(vQC_CChkBodyO:GetWidth()-33,vQC_CChkBodyO:GetHeight()-11)
+			vQC_CChkBodyOScFr:SetPoint("TOPLEFT", vQC_CChkBodyO, 5, -6)
+			vQC_CChkBodyO.vQC_CChkBodyOScFr = vQC_CChkBodyOScFr
+		local vQC_CChkBodyOC = CreateFrame("Frame", "vQC_CChkBodyOC", vQC_CChkBodyOScFr, BackdropTemplateMixin and "BackdropTemplate")
+			vQC_CChkBodyOC:SetSize(1,1)
+			vQC_CChkBodyOC.Content = vQC_CChkBodyOC
+			vQC_CChkBodyOScFr:SetScrollChild(vQC_CChkBodyOC)
+
+-- ATT Character Check Body 2 (Character Information)
+	local vQC_CChkBodyTT = CreateFrame("Frame", "vQC_CChkBodyTT", vQC_CChk, BackdropTemplateMixin and "BackdropTemplate")
+		vQC_CChkBodyTT:SetBackdrop(Backdrop_B)
+		vQC_CChkBodyTT:SetSize(203,24)
+		vQC_CChkBodyTT:ClearAllPoints()
+		vQC_CChkBodyTT:SetPoint("TOPRIGHT", vQC_CChkTitle, 1, -22)
+			vQC_CChkBodyTT.Text = vQC_CChkBodyTT:CreateFontString("T")
+			vQC_CChkBodyTT.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
+			vQC_CChkBodyTT.Text:SetPoint("CENTER", vQC_CChkBodyTT)
+			vQC_CChkBodyTT.Text:SetText(Colors(7,"Querying For: ")..Colors(7,"--"))
+
+	local vQC_CChkBodyT = CreateFrame("Frame", "vQC_CChkBodyT", vQC_CChk, BackdropTemplateMixin and "BackdropTemplate")
+	--	vQC_CChkBodyT:SetBackdrop(Backdrop_C)
+		vQC_CChkBodyT:SetSize(vQC_CChkBodyTT:GetWidth(),vQC_CChk:GetHeight()-52)
+		vQC_CChkBodyT:ClearAllPoints()
+		vQC_CChkBodyT:SetPoint("TOPRIGHT", vQC_CChk, -2, -47)
+		local vQC_CChkBodyTScFr = CreateFrame("ScrollFrame", "vQC_CChkBodyTScFr", vQC_CChkBodyT, "UIPanelScrollFrameTemplate")
+			vQC_CChkBodyTScFr:ClearAllPoints()
+			vQC_CChkBodyTScFr:SetSize(vQC_CChkBodyT:GetWidth()-33,vQC_CChkBodyT:GetHeight()-11)
+			vQC_CChkBodyTScFr:SetPoint("TOPLEFT", vQC_CChkBodyT, 5, -6)
+			vQC_CChkBodyT.vQC_CChkBodyTScFr = vQC_CChkBodyTScFr
+		local vQC_CChkBodyTC = CreateFrame("Frame", "vQC_CChkBodyTC", vQC_CChkBodyTScFr, BackdropTemplateMixin and "BackdropTemplate")
+			vQC_CChkBodyTC:SetSize(1,1)
+			vQC_CChkBodyTC.Content = vQC_CChkBodyTC
+			vQC_CChkBodyTScFr:SetScrollChild(vQC_CChkBodyTC)
+
+
+
 ------------------------------------------------------------------------
 -- Main Window
 ------------------------------------------------------------------------
@@ -1063,7 +1333,6 @@ end
 			vQC_QuestID_Query:SetPoint("RIGHT", vQC_QID_Inc, 25, 0)
 			vQC_QuestID_Query:SetNormalTexture("Interface\\MINIMAP\\TRACKING\\None")
 			vQC_QuestID_Query:SetScript("OnClick", function() CheckQuestAPI() end)
-			
 -- Main Quest Results Header (Progress, None, Done, Not Done)
 	local vQC_ResultHeader = CreateFrame("Frame", "vQC_ResultHeader", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_ResultHeader:SetSize(vQC_Main:GetWidth()-5,24)
@@ -1073,7 +1342,6 @@ end
 			vQC_ResultHeader.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
 			vQC_ResultHeader.Text:SetPoint("CENTER", vQC_ResultHeader, "CENTER", 0, 0)
 			vQC_ResultHeader.Text:SetText("")
-			
 -- Main Quest Results (Not Found)
 	local vQC_NoResultsFound = CreateFrame("Frame", "vQC_NoResultsFound", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_NoResultsFound:SetSize(vQC_Main:GetWidth()-5,vQC_Main:GetHeight()-(vQC_Title:GetHeight()+vQC_ResultHeader:GetHeight()+vQC_Quest:GetHeight()-4))
@@ -1097,7 +1365,6 @@ end
 			vQC_YesResultsFound.Text:SetFont(FontStyle[1], Font_Lg, "OUTLINE")
 			vQC_YesResultsFound.Text:SetPoint("TOP", vQC_YesResultsFound, 0, -8)
 			vQC_YesResultsFound.Text:SetText("")
-			
 -- Main Quest Results Layout
 -- Quest ID
 	local vQC_L_ID = CreateFrame("Frame", "vQC_L_ID", vQC_YesResultsFound, BackdropTemplateMixin and "BackdropTemplate")
@@ -1416,7 +1683,6 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		local TheEvents = {
 			"QUEST_DETAIL", --1 selecting fresh quest
 			"QUEST_FINISHED", --3 when closing the quest/accept quest
-	--		"QUEST_WATCH_LIST_CHANGED", --Minor when accept quest
 			"QUEST_LOG_UPDATE", --opening questLog (cause QC to close)
 			"QUEST_PROGRESS", --ready to turn in quest
 			"QUEST_TURNED_IN", --update QC when quest turned in
@@ -1453,7 +1719,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 					if DEBUG then DEBUG = false d = "Dis" else DEBUG = true d = "En" end
 					DeOutput("Debug "..d.."abled")
 				elseif cmd == "attcheck" or cmd == "a" then
-					print("Coming Soon")
+					vQC_CChk:Show()
 				elseif cmd == "ver" or cmd == "v" then
 					print(vQC_AppTitle.." - "..vQC_Revision)
 				elseif cmd == "?" then
@@ -1473,32 +1739,16 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		vQC_MiniW:Hide()
 		vQC_Main:Hide()
 		vQC_WBMain:Hide()
+		vQC_CChk:Hide()
 		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
-	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
-	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
-	
 	if events == "BONUS_ROLL_ACTIVATE" then
 		local rewardType, rewardLink, rewardQuantity, rewardSpecID, _, _, currencyID, isSecondaryResult, isCorrupted = ...;
 		print(rewardType, rewardLink, rewardQuantity, rewardSpecID, currencyID, isSecondaryResult, isCorrupted)
 	end
+	
+	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
+
+	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
 end)
-------------------------------------------------------------------------
--- Debug Quest # Randomonizer
-------------------------------------------------------------------------
-if DEBUG then
-	local vQC_DebugIcon = CreateFrame("Button", "vQC_DebugIcon", vQC_ATTTitle)
-		vQC_DebugIcon:SetSize(24, 24)
-		vQC_DebugIcon:SetNormalTexture("Interface\\GLUES\\CharacterSelect\\CharacterUndelete")
-		vQC_DebugIcon:ClearAllPoints()
-			if LeftRightATT == "LEFT" then
-				vQC_DebugIcon:SetPoint("RIGHT", vQC_ATTTitle, 0, 0)
-			elseif LeftRightATT == "RIGHT" then
-				vQC_DebugIcon:SetPoint("LEFT", vQC_ATTTitle, 0, 0)
-			end
-		vQC_DebugIcon:SetScript("OnClick", function()
-			vQC_QuestID:SetNumber(math.random(MaxQuestID))
-			CheckQuestAPI()
-		end)
-end
