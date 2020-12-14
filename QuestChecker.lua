@@ -30,7 +30,7 @@
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
 	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
-	local vQC_Revision = "12132020_214700" --Ignore, its for my Debugging Purpose :)
+	local vQC_Revision = "12142020_094900" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -45,14 +45,15 @@
 -- Table of Reuseable Icons
 ------------------------------------------------------------------------
 	local ReuseIcons = {
-		"|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t",  --Did Done
-		"|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t",  --Not Done
-		"|TInterface\\COMMON\\Indicator-Green:14|t",  -- Selected
-		"|TInterface\\COMMON\\Indicator-Red:14|t", -- Not Selected
-		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", -- In Progress
-		"|TInterface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked:18|t", --MapPin
-		"|TInterface\\COMMON\\icon-noloot:18|t", --No Loot Bag
-		"|TInterface\\Tooltips\\ReforgeGreenArrow:14|t", -- Waiting (In Progress)
+		"|TInterface\\RAIDFRAME\\ReadyCheck-Ready:14|t",  					-- 1 Did Done
+		"|TInterface\\RAIDFRAME\\ReadyCheck-NotReady:14|t",  				-- 2 Not Done
+		"|TInterface\\COMMON\\Indicator-Green:14|t",  						-- 3 Selected
+		"|TInterface\\COMMON\\Indicator-Red:14|t", 							-- 4 Not Selected
+		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", 				-- 5 In Progress
+		"|TInterface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked:18|t", 	-- 6 MapPin
+		"|TInterface\\COMMON\\icon-noloot:18|t", 							-- 7 No Loot Bag
+		"|TInterface\\Tooltips\\ReforgeGreenArrow:14|t", 					-- 8 Waiting (In Progress)
+		"|TInterface\\GossipFrame\\ActiveQuestIcon:14|t", 					-- 9 Active Quest To Turn In
 	}
 ------------------------------------------------------------------------
 -- List of Fonts To Use (Might be more)
@@ -569,7 +570,8 @@ function ShowChainQuest()
 	
 	HdrPos = 0
 	for i = 1, #vQCSL do
-		local DidQuestIcon = (vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or (vC_QLogs.GetLogIndexForQuestID(vQCSL[i]) and ReuseIcons[8] or ReuseIcons[2]))
+		local DidQuestIcon = (vC_QLogs.IsComplete(vQCSL[i]) and ReuseIcons[9] or (vC_QLogs.GetLogIndexForQuestID(vQCSL[i]) and ReuseIcons[8] or(vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])))
+		
 		local QuestNa = (vC_QLogs.GetTitleForQuestID(vQCSL[i]) == nil and Colors(1,"Querying Data...") or (vQCSL[i] == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(vQCSL[i]))) or Colors(6,vC_QLogs.GetTitleForQuestID(vQCSL[i])))
 		
 		if _G["vSLIn"..i] == nil then --22/0
@@ -714,18 +716,17 @@ end
 ------------------------------------------------------------------------
 function TryQueryAgain(i,q,mi,ma)
 	if DEBUG then DeOutput("TryQueryAgain",i,q) end
-	local QStmt = { "Querying Data...", "Server Failed to Response...", }
 	local tVar = _G["vSLQN"..i]:GetName()
 	tVar = C_Timer.NewTicker(
 		mi,
 		function()
-			if strfind(_G["vSLQN"..i].Text:GetText(),QStmt[1]) or strfind(_G["vSLQN"..i].Text:GetText(),QStmt[2]) then
+			if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") or strfind(_G["vSLQN"..i].Text:GetText(),"Server Failed to Response...") then
 				_G["vSLInB"..i]:Hide()
 			else
 				_G["vSLInB"..i]:Show()
 			end
-			if strfind(_G["vSLQN"..i].Text:GetText(),QStmt[1]) then
-				_G["vSLQN"..i].Text:SetText(vC_QLogs.GetTitleForQuestID(q) == nil and Colors(1,QStmt[1]) or (q == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(q))) or Colors(6,vC_QLogs.GetTitleForQuestID(q)))
+			if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") then
+				_G["vSLQN"..i].Text:SetText(vC_QLogs.GetTitleForQuestID(q) == nil and Colors(1,"Querying Data...") or (q == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(q))) or Colors(6,vC_QLogs.GetTitleForQuestID(q)))
 				_G["vSLInB"..i]:SetScript("OnEnter", function()
 					GameTooltip:ClearLines()
 					GameTooltip:Hide()
@@ -738,8 +739,8 @@ function TryQueryAgain(i,q,mi,ma)
 				end)
 			end
 			if tVar._remainingIterations == 1 then
-				if strfind(_G["vSLQN"..i].Text:GetText(),QStmt[1]) then
-					_G["vSLQN"..i].Text:SetText(string.gsub(_G["vSLQN"..i].Text:GetText(),QStmt[1],QStmt[2]))
+				if strfind(_G["vSLQN"..i].Text:GetText(),"Querying Data...") then
+					_G["vSLQN"..i].Text:SetText(string.gsub(_G["vSLQN"..i].Text:GetText(),"Querying Data...","Server Failed to Response..."))
 					_G["vSLInB"..i]:Hide()
 				end
 				tVar:Cancel()
@@ -919,7 +920,7 @@ end
 function Colors(c,t)
 	-- 1R 2G 3B 4Y 5B 6W 7Custom
 	local ColorChoice = { "FF0000", "00FF00", "0000FF", "FFFF00", "000000", "FFFFFF", "CCCC66", }
-	return "|cFF"..ColorChoice[c]..t.."|r"
+	return "|cFF"..ColorChoice[c]..(t == nil and "" or t).."|r"
 end
 ------------------------------------------------------------------------
 -- Convert Epoch Sec to D/H:M.S
@@ -963,7 +964,7 @@ function ToolTipsOnly(f)
 	end
 	if f == vQC_WBMainRefresh then msg = "Click here to Refresh World Boss List..." end 
 	if f == vQC_WBMapB then msg = vQC_WBMapB:GetText() end
-	if f == vQC_MiniMap then msg = vQC_AppTitle.."\n\nType in "..Colors(2,"\/qc ?").." for more options" end
+	if f == vQC_MiniMap then msg = vQC_AppTitle.."\n\n"..Colors(2,"\/qc ?").." for more options" end
 	if f == vQC_MiniQ then msg = "Quest ID: "..Colors(2,vQC_MiniQ.Text:GetText()).."\n\nClick to check Quest." end
 	if f == vQC_MiniW then msg = "Quest ID: "..Colors(2,vQC_MiniW.Text:GetText()).."\n\nClick to check Quest." end
 	if f == vQC_MapPinIcon then msg = "Pin coord to the map" end
@@ -1367,7 +1368,7 @@ end
 -- Storyline Main
 	local vQC_StoryMain = CreateFrame("Frame", "vQC_StoryMain", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
 		vQC_StoryMain:SetBackdrop(Backdrop_A)
-		vQC_StoryMain:SetSize(vQC_Main:GetWidth(),250)
+		vQC_StoryMain:SetSize(vQC_Main:GetWidth(),TmpHeight)
 		vQC_StoryMain:ClearAllPoints()
 		vQC_StoryMain:SetPoint("BOTTOM", vQC_Main, 0, 0-vQC_StoryMain:GetHeight()+4)
 		vQC_StoryMain:EnableMouse(true)
@@ -1757,7 +1758,6 @@ end
 local vQC_OnUpdate = CreateFrame("Frame")
 vQC_OnUpdate:RegisterEvent("ADDON_LOADED")
 vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
--- More Test is needed on what events are needed but this is what i can tell so far is working as intended
 	if event == "ADDON_LOADED" then
 		local TheEvents = {
 			"QUEST_DETAIL", --1 selecting fresh quest
@@ -1822,7 +1822,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
-	if event == "QUEST_FINISHED" then
+	if event == "QUEST_LOG_UPDATE" or vQC_StoryMain:IsVisible() then
 		CheckQuestAPI()
 	end
 	if events == "BONUS_ROLL_ACTIVATE" then
@@ -1831,6 +1831,5 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	end
 	
 	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
-
 	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
 end)
