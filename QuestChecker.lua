@@ -30,7 +30,7 @@
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
 	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
-	local vQC_Revision = "12132020_152200" --Ignore, its for my Debugging Purpose :)
+	local vQC_Revision = "12132020_214700" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -52,6 +52,7 @@
 		"|TInterface\\HELPFRAME\\ReportLagIcon-Movement:20|t", -- In Progress
 		"|TInterface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked:18|t", --MapPin
 		"|TInterface\\COMMON\\icon-noloot:18|t", --No Loot Bag
+		"|TInterface\\Tooltips\\ReforgeGreenArrow:14|t", -- Waiting (In Progress)
 	}
 ------------------------------------------------------------------------
 -- List of Fonts To Use (Might be more)
@@ -283,6 +284,8 @@ function WorldBossCheck(arg)
 								vQC_WBTitle.Icon:SetTexture("Interface\\ENCOUNTERJOURNAL\\UI-EJ-BOSS-"..WBIm)
 							GameTooltip:AddLine(WhatExpac[WBEx].."\n\n")
 							GameTooltip:AddDoubleLine("Boss: ",Colors(7,WBNa))
+							GameTooltip:AddDoubleLine("Quest ID: ",Colors(7,WBQu))
+				--			GameTooltip:AddDoubleLine("Bonus ID: ",Colors(7,"Soon"))
 							GameTooltip:AddDoubleLine("Zone: ",Colors(7,(WBZo ~= 0 and vC_CMaps.GetMapInfo(WBZo).name or "Unknown")))
 							GameTooltip:AddDoubleLine("Coords: ",Colors(7,(WBZo ~= 0 and (WBXc*100)..", "..(WBYc*100) or "Unknown")))
 							GameTooltip:AddLine("\nClick here to:\n"..Colors(2,(ExBool and "Create Map Pin to World Boss" or "Add World Quest Objective")))
@@ -566,7 +569,7 @@ function ShowChainQuest()
 	
 	HdrPos = 0
 	for i = 1, #vQCSL do
-		local DidQuest = (vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])
+		local DidQuestIcon = (vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or (vC_QLogs.GetLogIndexForQuestID(vQCSL[i]) and ReuseIcons[8] or ReuseIcons[2]))
 		local QuestNa = (vC_QLogs.GetTitleForQuestID(vQCSL[i]) == nil and Colors(1,"Querying Data...") or (vQCSL[i] == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(vQCSL[i]))) or Colors(6,vC_QLogs.GetTitleForQuestID(vQCSL[i])))
 		
 		if _G["vSLIn"..i] == nil then --22/0
@@ -575,7 +578,7 @@ function ShowChainQuest()
 				vSLIn:SetSize(22,22)
 				vSLIn:SetPoint("TOPLEFT",vQC_SLContent,0,HdrPos)
 				local vSLInB = CreateFrame("Button","vSLInB"..i, _G["vSLIn"..i])
-					vSLInB:SetSize(16,16)
+					vSLInB:SetSize(14,14)
 					vSLInB:SetPoint("CENTER", "vSLIn"..i, "CENTER", 0, 0)
 					vSLInB:SetNormalTexture("Interface\\FriendsFrame\\InformationIcon")
 					vSLInB:SetScript("OnClick", function()
@@ -583,14 +586,15 @@ function ShowChainQuest()
 						CheckQuestAPI()
 					end)
 					vSLInB:SetScript("OnEnter", function()
-						GameTooltip:ClearLines()
-						GameTooltip:Hide()
-						GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
-						GameTooltip:AddLine(vQC_StoryTitle.Text:GetText().."\n\n")
+					GameTooltip:ClearLines()
+					GameTooltip:Hide()
+					GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
+					--13565
+						GameTooltip:AddLine(DidQuestIcon..vQC_StoryTitle.Text:GetText().."\n\n")
 						GameTooltip:AddDoubleLine("Name: ",Colors(7,QuestNa))
 						GameTooltip:AddDoubleLine("ID: ",Colors(7,vQCSL[i]))
 						GameTooltip:AddLine("\nClick here for more details!")
-						GameTooltip:Show()
+					GameTooltip:Show()
 					end)
 					vSLInB:SetScript("OnLeave", function()
 						GameTooltip:ClearLines()
@@ -605,7 +609,7 @@ function ShowChainQuest()
 					GameTooltip:ClearLines()
 					GameTooltip:Hide()
 					GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
-						GameTooltip:AddLine(vQC_StoryTitle.Text:GetText().."\n\n")
+						GameTooltip:AddLine(DidQuestIcon..vQC_StoryTitle.Text:GetText().."\n\n")
 						GameTooltip:AddDoubleLine("Name: ",Colors(7,QuestNa))
 						GameTooltip:AddDoubleLine("ID: ",Colors(7,vQCSL[i]))
 						GameTooltip:AddLine("\nClick here for more details!")
@@ -637,12 +641,12 @@ function ShowChainQuest()
 				vSLDo:SetSize(22,22)
 				vSLDo:SetPoint("TOPLEFT",vQC_SLContent,53,HdrPos)
 					vSLDo.Icon = vSLDo:CreateTexture(nil, "OVERLAY")
-					vSLDo.Icon:SetSize(16,16)
+					vSLDo.Icon:SetSize(14,14)
 					vSLDo.Icon:SetPoint("CENTER", "vSLDo"..i, "CENTER", 0, 0)
-					vSLDo.Icon:SetTexture(string.sub(DidQuest, 3, -6))
+					vSLDo.Icon:SetTexture(string.sub(DidQuestIcon, 3, -6))
 
 		else
-			_G["vSLDo"..i].Icon:SetTexture(string.sub(DidQuest, 3, -6))
+			_G["vSLDo"..i].Icon:SetTexture(string.sub(DidQuestIcon, 3, -6))
 		end
 		if not _G["vSLDo"..i]:IsVisible() then _G["vSLDo"..i]:Show() end
 		if _G["vSLQI"..i] == nil then --56/104
@@ -672,7 +676,7 @@ function ShowChainQuest()
 		end
 		if not _G["vSLQN"..i]:IsVisible() then _G["vSLQN"..i]:Show() end
 		
-		HdrPos = HdrPos - 20
+		HdrPos = HdrPos - 18
 	end
 	local QueryFin = true
 	for i = 1, #vQCSL do
@@ -1817,6 +1821,9 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		
 		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
+	end
+	if event == "QUEST_FINISHED" then
+		CheckQuestAPI()
 	end
 	if events == "BONUS_ROLL_ACTIVATE" then
 		local rewardType, rewardLink, rewardQuantity, rewardSpecID, _, _, currencyID, isSecondaryResult, isCorrupted = ...;
