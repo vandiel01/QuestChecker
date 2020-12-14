@@ -277,7 +277,7 @@ function WorldBossCheck(arg)
 						vWBMaB:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
 						vWBMaB:SetScript("OnClick", function()
 							if ExBool then MakePins(WBZo,WBXc,WBYc,WBNa) else isAdd(WBQu,1) end
-							vQC_QuestID:SetNumber(questID)
+							vQC_QuestID:SetNumber(WBQu)
 							CheckQuestAPI()
 						end)
 						vWBMaB:SetScript("OnEnter", function()
