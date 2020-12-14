@@ -30,7 +30,7 @@
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
 	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
-	local vQC_Revision = "12142020_094900" --Ignore, its for my Debugging Purpose :)
+	local vQC_Revision = "12142020_154800" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -391,7 +391,8 @@ end
 ------------------------------------------------------------------------
 function WatchQLogAct(arg)
 	if DEBUG then DeOutput("WatchQLogAct") end
-
+	Status = xpcall(WatchMemoryCount(), err) --Clean up After Storyline Query
+	
 	if vQC_QuestID:GetNumber() == 0 then
 		vQC_NoResultsFound:Hide()
 		vQC_YesResultsFound:Hide()
@@ -494,7 +495,7 @@ function QueryQuestAPI()
 		AnimToggle(1)
 	end
 	-- Query AllTheThings SavedVariables
-	Status = xpcall(ATTQueryVariables(), err)
+	Status = xpcall(ATTQueryDatabase(), err)
 	if vQC_WHLinkBox:IsVisible() and tonumber(string.sub(vQC_WHLinkTxt:GetText(),19)) ~= vQC_QuestID:GetNumber() then
 		vQC_WHLinkTxt:SetText("wowhead.com/quest="..vQC_QuestID:GetNumber())
 	end
@@ -574,6 +575,7 @@ function ShowChainQuest()
 		
 		local QuestNa = (vC_QLogs.GetTitleForQuestID(vQCSL[i]) == nil and Colors(1,"Querying Data...") or (vQCSL[i] == vQC_QuestID:GetNumber() and Colors(2,vC_QLogs.GetTitleForQuestID(vQCSL[i]))) or Colors(6,vC_QLogs.GetTitleForQuestID(vQCSL[i])))
 		
+		-- Information/Clickable Icon
 		if _G["vSLIn"..i] == nil then --22/0
 			local vSLIn = CreateFrame("Frame","vSLIn"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
 		--		vSLIn:SetBackdrop(Backdrop_NBgnd)
@@ -624,6 +626,8 @@ function ShowChainQuest()
 		end
 		if strfind(QuestNa,"Querying Data...") then _G["vSLInB"..i]:Hide() else _G["vSLInB"..i]:Show() end
 		if not _G["vSLIn"..i]:IsVisible() then _G["vSLIn"..i]:Show() end
+		
+		-- Index'ng Number
 		if _G["vSLi"..i] == nil then --34/22
 			local vSLi = CreateFrame("Frame","vSLi"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
 		--		vSLi:SetBackdrop(Backdrop_NBgnd)
@@ -637,6 +641,8 @@ function ShowChainQuest()
 			_G["vSLi"..i].Text:SetText(Colors(6,i))
 		end
 		if not _G["vSLi"..i]:IsVisible() then _G["vSLi"..i]:Show() end
+		
+		-- Check, X or ? for Quest Progress
 		if _G["vSLDo"..i] == nil then --22/56
 			local vSLDo = CreateFrame("Frame","vSLDo"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
 		--		vSLDo:SetBackdrop(Backdrop_NBgnd)
@@ -651,6 +657,8 @@ function ShowChainQuest()
 			_G["vSLDo"..i].Icon:SetTexture(string.sub(DidQuestIcon, 3, -6))
 		end
 		if not _G["vSLDo"..i]:IsVisible() then _G["vSLDo"..i]:Show() end
+		
+		-- Quest ID
 		if _G["vSLQI"..i] == nil then --56/104
 			local vSLQI = CreateFrame("Frame","vSLQI"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
 		--		vSLQI:SetBackdrop(Backdrop_NBgnd)
@@ -664,6 +672,8 @@ function ShowChainQuest()
 			_G["vSLQI"..i].Text:SetText(Colors(6,vQCSL[i]))
 		end
 		if not _G["vSLQI"..i]:IsVisible() then _G["vSLQI"..i]:Show() end
+		
+		-- Quest Name
 		if _G["vSLQN"..i] == nil then --163/160
 			local vSLQN = CreateFrame("Frame","vSLQN"..i,vQC_SLContent,BackdropTemplateMixin and "BackdropTemplate")
 		--		vSLQN:SetBackdrop(Backdrop_NBgnd)
@@ -687,16 +697,6 @@ function ShowChainQuest()
 			Status = xpcall(TryQueryAgain(i,vQCSL[i],1,5),err)
 		end
 	end
-	if (#vQCSL <= OldvQCSL) then
-		for i = #vQCSL+1, OldvQCSL do
-			_G["vSLIn"..i]:Hide()
-			_G["vSLi"..i]:Hide()
-			_G["vSLDo"..i]:Hide()
-			_G["vSLQI"..i]:Hide()
-			_G["vSLQN"..i]:Hide()
-		end
-	end
-	OldvQCSL = #vQCSL
 
 	if QueryFin then
 		AnimToggle(1)
@@ -709,7 +709,7 @@ function ShowChainQuest()
 				ToggleInputs(1)
 			end)
 	end
-	Status = xpcall(WatchMemoryCount(), err) --Clean up After Storyline Query
+	
 end
 ------------------------------------------------------------------------
 -- Query Again if still have "Querying Data"
@@ -733,7 +733,7 @@ function TryQueryAgain(i,q,mi,ma)
 					GameTooltip:SetOwner(_G["vSLInB"..i],"ANCHOR_LEFT")
 						GameTooltip:AddLine(vQC_StoryTitle.Text:GetText().."\n\n")
 						GameTooltip:AddDoubleLine("Name: ",Colors(7,QuestNa))
-						GameTooltip:AddDoubleLine("ID: ",Colors(7,vQCSL[i]))
+						GameTooltip:AddDoubleLine("ID: ",Colors(7,q))
 						GameTooltip:AddLine("\nClick here for more details!")
 					GameTooltip:Show()
 				end)
@@ -751,8 +751,8 @@ end
 ------------------------------------------------------------------------
 -- Query Information from AllTheThings SavedVariables if Quest Completed
 ------------------------------------------------------------------------
-function ATTQueryVariables()
-	if DEBUG then DeOutput("ATTQueryVariables") end
+function ATTQueryDatabase()
+	if DEBUG then DeOutput("ATTQueryDatabase") end
 	if IsAddOnLoaded("AllTheThings") then
 		local MInfo, TeTab, tMInfo = {}, {}, {}
 		local Found = 1
@@ -939,12 +939,12 @@ end
 function WatchMemoryCount()
 	if DEBUG then DeOutput("WatchMemoryCount") end
 	QC_Mem = GetAddOnMemoryUsage("QuestChecker")
-	if QC_Mem < 150 then vQC_Quest_MemIcon:Hide() else vQC_Quest_MemIcon:Show() end
-	if QC_Mem > 1024 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Red") end
-	if QC_Mem < 1024 and QC_Mem > 512 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Yellow") end
-	if QC_Mem < 512 and QC_Mem > 151 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green") end
-	if QC_Mem > 1024 and not InCombatLockdown() then
-		if DEBUG then print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2)..Colors(6,"Dumping Mem: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb")))) end
+	if QC_Mem < 127 then vQC_Quest_MemIcon:Hide() else vQC_Quest_MemIcon:Show() end
+	if QC_Mem > 512 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Red") end
+	if QC_Mem < 512 and QC_Mem > 256 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Yellow") end
+	if QC_Mem < 256 and QC_Mem > 128 then vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green") end
+	if QC_Mem > 256 and not InCombatLockdown() then
+		if DEBUG then print(strsub(GetAddOnMetadata("QuestChecker", "Title"),2)..Colors(6," - Dump Mem: ")..Colors(2,(QC_Mem > 999 and format("%.1f%s", QC_Mem / 1024, " mb") or format("%.0f%s", QC_Mem, " kb")))) end
 		collectgarbage("collect")
 		vQC_Quest_MemIcon:SetNormalTexture("Interface\\COMMON\\Indicator-Green")
 	end
@@ -1760,15 +1760,17 @@ vQC_OnUpdate:RegisterEvent("ADDON_LOADED")
 vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local TheEvents = {
-			"QUEST_DETAIL", --1 selecting fresh quest
-			"QUEST_FINISHED", --3 when closing the quest/accept quest
-			"QUEST_LOG_UPDATE", --opening questLog (cause QC to close)
-			"QUEST_PROGRESS", --ready to turn in quest
-			"QUEST_TURNED_IN", --update QC when quest turned in
-			"QUEST_COMPLETE", --update QC when quest turned in
+			"QUEST_DETAIL",			-- Checks when Quest Being Looked At/Ready To Accept/Decline
+			"QUEST_FINISHED",		-- Checks when Quest Turned in/Finished
+			"QUEST_LOG_UPDATE",		-- Checks ANY Quest that is actively searching
+			"QUEST_PROGRESS",		-- Checks when Quest are in Progress
+			"QUEST_TURNED_IN",		-- Checks when Quest Turned in/Finished
+			"QUEST_COMPLETE",		-- Checks when Quest Turned in/Finished
+			"QUEST_WATCH_UPDATE",	-- Quest Log Update (Completion/Progress?)
 			
 			--All To Test Below With Bonus Rolls
 			"BONUS_ROLL_RESULT",
+			"BONUS_ROLL_ACTIVATE",
 		}
 		for ev = 1, #TheEvents do
 			vQC_OnUpdate:RegisterEvent(TheEvents[ev])
@@ -1777,7 +1779,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		vQC_OnUpdate:RegisterEvent("PLAYER_LOGIN")
 	end
 	if event == "PLAYER_LOGIN" then
-		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle..(DEBUG and Colors(1," [DEBUG]") or ""))
+		DEFAULT_CHAT_FRAME:AddMessage("Loaded: "..vQC_AppTitle..(DEBUG and Colors(1,"  [Debug Mode]") or ""))
 		
 		SLASH_QuestChecker1 = '/qc'
 		SLASH_QuestChecker2 = '/qcheck'
@@ -1822,14 +1824,35 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
-	if event == "QUEST_LOG_UPDATE" or vQC_StoryMain:IsVisible() then
-		CheckQuestAPI()
-	end
-	if events == "BONUS_ROLL_ACTIVATE" then
+	if events == "BONUS_ROLL_RESULT" or events == "BONUS_ROLL_ACTIVATE" then
 		local rewardType, rewardLink, rewardQuantity, rewardSpecID, _, _, currencyID, isSecondaryResult, isCorrupted = ...;
 		print(rewardType, rewardLink, rewardQuantity, rewardSpecID, currencyID, isSecondaryResult, isCorrupted)
 	end
+
+	local Event_questID = GetQuestID()
+	if QuestMapFrame.DetailsFrame.questID ~= nil then Event_questID = QuestMapFrame.DetailsFrame.questID end
+	if Event_questID == 0 then return end
+	if vQC_StoryMain:IsVisible() and (
+			event == "QUEST_DETAIL" or
+			event == "QUEST_FINISHED" or 
+			event == "QUEST_TURNED_IN" or 
+			event == "QUEST_COMPLETE" or
+			event == "QUEST_WATCH_UPDATE"
+		) then
+		local NbrOfSLContent = (vQC_SLContent:GetNumChildren()/5)
+		for i = 1, NbrOfSLContent do
+			if _G["vSLQI"..i].Text:GetText() == questID then
+				local DidQuestIcon = (vC_QLogs.IsComplete(vQCSL[i]) and ReuseIcons[9] or (vC_QLogs.GetLogIndexForQuestID(vQCSL[i]) and ReuseIcons[8] or(vC_QLogs.IsQuestFlaggedCompleted(vQCSL[i]) and ReuseIcons[1] or ReuseIcons[2])))
+				_G["vSLDo"..i].Icon:SetTexture(string.sub(DidQuestIcon, 3, -6))
+				break
+			end
+		end
+		ATTQueryDatabase()
+	else
+		if vQC_Main:IsVisible() and (QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then
+			WatchQLogAct(event)
+		end
+	end
 	
-	if (vQC_Main:IsVisible() or QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then WatchQLogAct(event) end
-	if DEBUG then DeOutput("Event: "..event) end --Debugging Purpose
+	if DEBUG then DeOutput("Event: "..event) end
 end)
