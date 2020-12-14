@@ -30,7 +30,7 @@
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
 	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
-	local vQC_Revision = "12142020_154800" --Ignore, its for my Debugging Purpose :)
+	local vQC_Revision = "12142020_162200" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -277,6 +277,8 @@ function WorldBossCheck(arg)
 						vWBMaB:SetNormalTexture("Interface\\MINIMAP\\Minimap-Waypoint-MapPin-Untracked")
 						vWBMaB:SetScript("OnClick", function()
 							if ExBool then MakePins(WBZo,WBXc,WBYc,WBNa) else isAdd(WBQu,1) end
+							vQC_QuestID:SetNumber(questID)
+							CheckQuestAPI()
 						end)
 						vWBMaB:SetScript("OnEnter", function()
 							GameTooltip:ClearLines()
@@ -1849,7 +1851,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		end
 		ATTQueryDatabase()
 	else
-		if vQC_Main:IsVisible() and (QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible()) then
+		if QuestFrame:IsVisible() or QuestMapFrame.DetailsFrame:IsVisible() then
 			WatchQLogAct(event)
 		end
 	end
