@@ -5,7 +5,7 @@
         --- WOWHead Image can be found at:https://wow.zamimg.com/images/logos/big/new.png) ---
 -------------------------------------------------------------------------------------------------------
 	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
-	local vQC_Revision = "04272021_001000" --Ignore, its for my Debugging Purpose :)
+	local vQC_Revision = "06302021_1418" --Ignore, its for my Debugging Purpose :)
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -965,14 +965,20 @@ end
 ------------------------------------------------------------------------
 -- Mini Map Position when Dragging
 ------------------------------------------------------------------------
-function UpdateMiniMapButton()
+function UpdateMiniMapButton(arg)
     local Xpoa, Ypoa = GetCursorPosition()
     local Xmin, Ymin = Minimap:GetLeft(), Minimap:GetBottom()
     Xpoa = Xmin - Xpoa / Minimap:GetEffectiveScale() + 70
     Ypoa = Ypoa / Minimap:GetEffectiveScale() - Ymin - 70
     myIconPos = math.deg(math.atan2(Ypoa, Xpoa))
-    vQC_MiniMap:ClearAllPoints()
-    vQC_MiniMap:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 52 - (80 * cos(myIconPos)), (80 * sin(myIconPos)) - 52)
+	if arg == 1 then
+		vQC_MiniMap:ClearAllPoints()
+		vQC_MiniMap:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 52 - (80 * cos(myIconPos)), (80 * sin(myIconPos)) - 52)
+	end
+	if arg == 2 then
+		vQC_MiniMapB:ClearAllPoints()
+		vQC_MiniMapB:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 52 - (80 * cos(myIconPos)), (80 * sin(myIconPos)) - 52)
+	end
 end
 ------------------------------------------------------------------------
 -- Best uiMapID for Player
@@ -1015,13 +1021,33 @@ end
 			vQC_MiniMap:SetScript("OnLeave", function() ToolTipsOnly(0) end)
 			vQC_MiniMap:SetScript("OnDragStart", function()
 				vQC_MiniMap:StartMoving()
-				vQC_MiniMap:SetScript("OnUpdate", UpdateMiniMapButton)
+				vQC_MiniMap:SetScript("OnUpdate", UpdateMiniMapButton(1))
 			end)
 			vQC_MiniMap:SetScript("OnDragStop", function()
 				vQC_MiniMap:StopMovingOrSizing()
 				vQC_MiniMap:SetScript("OnUpdate", nil)
-				UpdateMiniMapButton()
+				UpdateMiniMapButton(1)
 			end)
+	local vQC_MiniMapB = CreateFrame("Button", "vQC_MiniMapB", Minimap)
+		vQC_MiniMapB:SetFrameLevel(8)
+		vQC_MiniMapB:SetSize(30, 30)
+		vQC_MiniMapB:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\UI-EncounterJournalTextures")
+		vQC_MiniMapB:GetNormalTexture():SetTexCoord(0.898, 0.269, 0.898, 0.322, 1, 0.269, 1, 0.322)
+		vQC_MiniMapB:ClearAllPoints()
+		vQC_MiniMapB:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -15, 12)
+		vQC_MiniMapB:SetMovable(true)
+		vQC_MiniMapB:RegisterForDrag("LeftButton")
+			vQC_MiniMapB:SetScript("OnClick", function() WorldBossCheck(1) end)
+			vQC_MiniMapB:SetScript("OnDragStart", function()
+				vQC_MiniMapB:StartMoving()
+				vQC_MiniMapB:SetScript("OnUpdate", UpdateMiniMapButton(2))
+			end)
+			vQC_MiniMapB:SetScript("OnDragStop", function()
+				vQC_MiniMapB:StopMovingOrSizing()
+				vQC_MiniMapB:SetScript("OnUpdate", nil)
+				UpdateMiniMapButton(2)
+			end)
+
 ------------------------------------------------------------------------
 -- Mini Frame for Quest Log/World Frame
 ------------------------------------------------------------------------
@@ -1505,11 +1531,13 @@ end
 			
 		-- World Boss Icon
 		local vQC_MainWBIcon = CreateFrame("Button", "vQC_MainWBIcon", vQC_SideTab)
-			vQC_MainWBIcon:SetSize(24,24)
-			vQC_MainWBIcon:SetPoint("TOPLEFT", vQC_SideTab, 8, -63)
-			vQC_MainWBIcon:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\DungeonJournal")
-			vQC_MainWBIcon:GetNormalTexture():SetTexCoord(0.293, 0.859, 0.293, 0.938, 0.332, 0.859, 0.332, 0.938)
+			vQC_MainWBIcon:SetSize(36,36)
+			vQC_MainWBIcon:SetPoint("TOPLEFT", vQC_SideTab, 0, -60)
+			vQC_MainWBIcon:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\UI-EncounterJournalTextures")
+			vQC_MainWBIcon:GetNormalTexture():SetTexCoord(0.898, 0.269, 0.898, 0.322, 1, 0.269, 1, 0.322)
 			vQC_MainWBIcon:SetScript("OnClick", function() WorldBossCheck(1) end)
+			-- Top Left, Top Right, Bottom Left, Bottom Right
+			-- print(vQC_MainWBIcon:GetNormalTexture():GetTexCoord())
 
 		-- NPC Info Icon
 		local vQC_MainNPCIcon = CreateFrame("Button", "vQC_MainNPCIcon", vQC_SideTab)
