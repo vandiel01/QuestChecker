@@ -6,6 +6,7 @@
 -------------------------------------------------------------------------------------------------------
 	local vQC_AppTitle = "|CFFFFFF00"..strsub(GetAddOnMetadata("QuestChecker", "Title"),2).."|r v"..GetAddOnMetadata("QuestChecker", "Version")
 	local vQC_Revision = "06302021_1418" --Ignore, its for my Debugging Purpose :)
+
 ------------------------------------------------------------------------
 -- API Variables
 ------------------------------------------------------------------------
@@ -221,6 +222,10 @@
 		{ 61814, 9, 60, 2433, "NurgashMuckformed", "Nurgash Muckformed", 1525, .272, .149, },					--46
 		{ 61815, 9, 60, 2432, "Oranomonos", "Oranomonos the Everbranching", 1565, .206, .634, },				--47
 		{ 61813, 9, 60, 2430, "Valinor", "Valinor, the Light of Eons", 1533, .263, .224, },						--48
+			--The Maw
+		{ 64531, 9, 60, 2456, "Mordretha", "Mor'geth, Tormentor of the Damned", 1543, .691, .442, },				--49
+			--Zereth Mortis
+		--{ 65143, 9, 60, 2550, "Valinor", "Valinor, the Light of Eons", 1533, .263, .224, },						--50
 	}
 ------------------------------------------------------------------------
 -- World Boss Checker
@@ -511,6 +516,7 @@ function GetQuestLineID()
 	if Re == 0 then mapID = vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber()) end
 	-- Is this Quest in Storyline Chains? (and X,Y, Subzone, and Zone)
 	mapID = vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber())
+	
 	if mapID then
 		StoryID = vC_QLine.GetQuestLineInfo(vQC_QuestID:GetNumber(),vC_QTask.GetQuestZoneID(vQC_QuestID:GetNumber()))
 		if StoryID then
@@ -1047,7 +1053,7 @@ end
 				vQC_MiniMapB:SetScript("OnUpdate", nil)
 				UpdateMiniMapButton(2)
 			end)
-
+			
 ------------------------------------------------------------------------
 -- Mini Frame for Quest Log/World Frame
 ------------------------------------------------------------------------
@@ -1536,6 +1542,8 @@ end
 			vQC_MainWBIcon:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\UI-EncounterJournalTextures")
 			vQC_MainWBIcon:GetNormalTexture():SetTexCoord(0.898, 0.269, 0.898, 0.322, 1, 0.269, 1, 0.322)
 			vQC_MainWBIcon:SetScript("OnClick", function() WorldBossCheck(1) end)
+			
+			-- vQC_MiniMapB:GetNormalTexture():SetTexCoord(460/512, 512/512, 275/1024, 330/1024)
 			-- Top Left, Top Right, Bottom Left, Bottom Right
 			-- print(vQC_MainWBIcon:GetNormalTexture():GetTexCoord())
 
@@ -1566,12 +1574,15 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "ADDON_LOADED" then
 		local TheEvents = {
 			-- All To Do With Quest
-			"QUEST_DETAIL",			-- Checks when Quest Being Looked At/Ready To Accept/Decline
-			"QUEST_FINISHED",		-- Checks when Quest Turned in/Finished
-			"QUEST_LOG_UPDATE",		-- Checks ANY Quest that is actively searching
-			"QUEST_PROGRESS",		-- Checks when Quest are in Progress
-			"QUEST_TURNED_IN",		-- Checks when Quest Turned in/Finished
-			"QUEST_COMPLETE",		-- Checks when Quest Turned in/Finished
+			"QUEST_DETAIL",				-- Checks when Quest Being Looked At/Ready To Accept/Decline
+			"QUEST_FINISHED",			-- Checks when Quest Turned in/Finished
+			"QUEST_LOG_UPDATE",			-- Checks ANY Quest that is actively searching
+			"QUEST_PROGRESS",			-- Checks when Quest are in Progress
+			"QUEST_TURNED_IN",			-- Checks when Quest Turned in/Finished
+			"QUEST_COMPLETE",			-- Checks when Quest Turned in/Finished
+			"PLAYER_MONEY",				-- Listen for Anima Amount Changes
+			"CURRENCY_DISPLAY_UPDATE",	-- Currency Updater
+			"BAG_UPDATE",				-- Fire when there new Anima in the BAG
 		}
 		for ev = 1, #TheEvents do
 			vQC_OnUpdate:RegisterEvent(TheEvents[ev])
@@ -1624,6 +1635,7 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 		end
 		
 		if IsAddOnLoaded("AllTheThings") then  vQC_ATTMain:Show() else vQC_ATTMain:Hide() end
+		
 		vQC_OnUpdate:UnregisterEvent("PLAYER_LOGIN")
 	end
 	if event == "QUEST_DETAIL" or
@@ -1640,6 +1652,6 @@ vQC_OnUpdate:SetScript("OnEvent", function(self, event, ...)
 	if event == "QUEST_FINISHED" or event == "QUEST_COMPLETE" then
 		Status = xpcall(WatchMemoryCount(), err) --Clean up Before Storyline Query
 	end	
-	
+
 	if DEBUG then DeOutput("Event: "..event) end
 end)
