@@ -1,5 +1,5 @@
 ## Author: Vandiel
-## Interface: 90200
+## Interface: 100002
 ## Notes: Quest Checker
 ## Title: .|TInterface\GossipFrame\TrainerGossipIcon:0|t Quest Checker
 ## Version: 2.4

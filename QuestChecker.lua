@@ -163,34 +163,34 @@
 	}
 	local WorldBossList = {
 	--Mist of Pandaria	
-		{ 32518, 5, 35, 814, "Nalak", "Nalak, The Storm Lord", 504, .60, .377, },								--01
+		{ 32518, 5, 35, 814, "Nalak", "Nalak, The Storm Lord", 504, .600, .377, },								--01
 		{ 32519, 5, 35, 826, "Oondasta", "Oondasta", 507, .499, .568, },										--02
-		{ 33118, 5, 35, 861, "Ordos", "Ordos, Fire-God of the Yaungol", 504, .60, .377, },						--03
+		{ 33118, 5, 35, 861, "Ordos", "Ordos, Fire-God of the Yaungol", 504, .600, .377, },						--03
 		{ 32098, 5, 35, 725, "Chief Salyis", "Salyis's Warband", 376, .707, .635, },							--04
 		{ 32099, 5, 35, 691, "SHA OF ANGER", "Sha of Anger", 379, .535, .652, },								--05
 		{ 33117, 5, 35, 857, "Chi Ji", "The Four Celestials", 554, .388, .552, },								--06
 	--Warlord of Dreanor
 		{ 37460, 6, 40, 1291, "Drov the Ruiner", "Drov the Ruiner", 543, .441, .399, },							--07
-		{ 37464, 6, 40, 1262, "Rukhmar", "Rukhmar", 542, .37, .393, },											--08
+		{ 37464, 6, 40, 1262, "Rukhmar", "Rukhmar", 542, .370, .393, },											--08
 		{ 39380, 6, 40, 1452, "SupremeLordKazzak", "Supreme Lord Kazzak", 534, .475, .221, },					--09
-		{ 37462, 6, 40, 1211, "Tarlna The Ancient", "Tarlna the Ageless", 543, .47, .867, },					--10
+		{ 37462, 6, 40, 1211, "Tarlna The Ancient", "Tarlna the Ageless", 543, .470, .867, },					--10
 	--Legion
-		{ 43512, 7, 45, 1790, "Ana-Mouz", "Ana-Mouz", 680, .31, .655, },										--11
+		{ 43512, 7, 45, 1790, "Ana-Mouz", "Ana-Mouz", 680, .310, .655, },										--11
 		{ 43193, 7, 45, 1774, "Calamir", "Calamir", 630, .377, .836, },											--12
 		{ 43448, 7, 45, 1789, "Drugon the Frostblood", "Drugon the Frostblood", 650, .584, .726, },				--13
-		{ 43985, 7, 45, 1795, "Flotsam", "Flotsam", 650, .492, .76, },											--14
+		{ 43985, 7, 45, 1795, "Flotsam", "Flotsam", 650, .492, .760, },											--14
 		{ 42819, 7, 45, 1770, "Humongris", "Humongris", 641, .246, .696, },										--15
-		{ 43192, 7, 45, 1769, "Levantus", "Levantus", 630, .43, .676, },										--16
-		{ 43513, 7, 45, 1783, "Nazak the Fiend", "Na'zak the Fiend", 685, .36, .664, },							--17
-		{ 42270, 7, 45, 1749, "Nithogg", "Nithogg", 634, .466, .30, },											--18
+		{ 43192, 7, 45, 1769, "Levantus", "Levantus", 630, .430, .676, },										--16
+		{ 43513, 7, 45, 1783, "Nazak the Fiend", "Na'zak the Fiend", 685, .360, .664, },						--17
+		{ 42270, 7, 45, 1749, "Nithogg", "Nithogg", 634, .466, .300, },											--18
 		{ 42779, 7, 45, 1763, "Sharthos", "Shar'thos", 641, .556, .432, },										--19
-		{ 42269, 7, 45, 1756, "The Soultakers", "The Soultakers", 634, .782, .86, },							--20
+		{ 42269, 7, 45, 1756, "The Soultakers", "The Soultakers", 634, .782, .860, },							--20
 		{ 44287, 7, 45, 1796, "Withered Jim", "Withered Jim", 630, .526, .808, },								--21
 			--Broken Isles
 		{ 47061, 11, 45, 1956, "FelReaver", "Apocron", 646, .592, .626, },										--22
 		{ 46947, 11, 45, 1883, "Brutallus", "Brutallus", 646, .592, .284, },									--23
 		{ 46948, 11, 45, 1884, "Malificus", "Malificus", 646, .598, .278, },									--24
-		{ 46945, 11, 45, 1885, "Sivash", "Si'vash", 646, .896, .33, },											--25
+		{ 46945, 11, 45, 1885, "Sivash", "Si'vash", 646, .896, .330, },											--25
 			--Argus
 		{ 49166, 12, 45, 2012, "InquisitorMeto", "Inquisitor Meto", 0, 0, 0, },									--26
 		{ 49169, 12, 45, 2010, "MatronFolnuna", "Matron Folnuna", 0, 0, 0, },									--27
@@ -198,10 +198,10 @@
 		{ 49170, 12, 45, 2013, "Occularus", "Occularus", 0, 0, 0, },											--29
 		{ 49171, 12, 45, 2014, "Sotanathor", "Sotanathor", 0, 0, 0, },											--30
 	--Battle of Azeroth
-		{ 52163, 8, 50, 2199, "AzurethosTheWingedTyphoon", "Azurethos, The Winged Typhoon", 895, .62, .24, },	--31
+		{ 52163, 8, 50, 2199, "AzurethosTheWingedTyphoon", "Azurethos, The Winged Typhoon", 895, .620, .240, },	--31
 		{ 52196, 8, 50, 2210, "DunegorgerKraulok", "Dunegorger Kraulok", 864, .443, .555, },					--32
 		{ 52157, 8, 50, 2197, "HailstoneConstruct", "Hailstone Construct", 896, .492, .746, },					--33
-		{ 52169, 8, 50, 2141, "Jiarak", "Ji'arak", 862, .69, .31, },											--34
+		{ 52169, 8, 50, 2141, "Jiarak", "Ji'arak", 862, .690, .310, },											--34
 		{ 52181, 8, 50, 2139, "Tzane", "T'zane", 863, .356, .336, },											--35
 		{ 52166, 8, 50, 2198, "WarbringerYenajz", "Warbringer Yenajz", 942, .832, .496, },						--36
 			--Nazjatar
@@ -214,7 +214,7 @@
 		{ 54895, 15, 50, 2345, "Ivus-the-Decayed", "Ivus the Decayed", 62, .414, .359, },						--41
 		{ 54895, 15, 50, 2329, "Ivus-the-Forest-Lord", "Ivus the Forest Lord", 62, .414, .359, },				--42
 			--Vale of Eternal Blossoms
-		{ 58705, 16, 50, 2378, "Grand Empress Shekzeer", "Grand Empress Shek'zara", 1530, .59, .564, },			--43
+		{ 58705, 16, 50, 2378, "Grand Empress Shekzeer", "Grand Empress Shek'zara", 1530, .590, .564, },		--43
 			--Uldum
 		{ 55466, 17, 50, 2381, "Vuklaz", "Vuk'laz the Earthbreaker", 1527, .457, .161, },						--44
 	--Shadowlands
@@ -223,9 +223,9 @@
 		{ 61815, 9, 60, 2432, "Oranomonos", "Oranomonos the Everbranching", 1565, .206, .634, },				--47
 		{ 61813, 9, 60, 2430, "Valinor", "Valinor, the Light of Eons", 1533, .263, .224, },						--48
 			--The Maw
-		{ 64531, 9, 60, 2456, "Mordretha", "Mor'geth, Tormentor of the Damned", 1543, .691, .442, },				--49
+		{ 64531, 9, 60, 2456, "Mawsworn Caster", "Mor'geth, Tormentor of the Damned", 1543, .691, .442, },		--49
 			--Zereth Mortis
-		--{ 65143, 9, 60, 2550, "Valinor", "Valinor, the Light of Eons", 1533, .263, .224, },						--50
+		{ 65143, 9, 60, 2468, "Guardian of the First Ones", "Antros <Keeper of the Antecedents>", 1970, .488, .054, },	--50
 	}
 ------------------------------------------------------------------------
 -- World Boss Checker
@@ -981,10 +981,6 @@ function UpdateMiniMapButton(arg)
 		vQC_MiniMap:ClearAllPoints()
 		vQC_MiniMap:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 52 - (80 * cos(myIconPos)), (80 * sin(myIconPos)) - 52)
 	end
-	if arg == 2 then
-		vQC_MiniMapB:ClearAllPoints()
-		vQC_MiniMapB:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 52 - (80 * cos(myIconPos)), (80 * sin(myIconPos)) - 52)
-	end
 end
 ------------------------------------------------------------------------
 -- Best uiMapID for Player
@@ -1019,41 +1015,11 @@ end
 		vQC_MiniMap:SetSize(28, 28)
 		vQC_MiniMap:SetNormalTexture("Interface\\TARGETINGFRAME\\PortraitQuestBadge")
 		vQC_MiniMap:ClearAllPoints()
-		vQC_MiniMap:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -10, -10)
-		vQC_MiniMap:SetMovable(true)
-		vQC_MiniMap:RegisterForDrag("LeftButton")
+		vQC_MiniMap:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 5, -20)
+		vQC_MiniMap:SetMovable(false)
 			vQC_MiniMap:SetScript("OnClick", function() WatchQLogAct(0) end)
 			vQC_MiniMap:SetScript("OnEnter", function() ToolTipsOnly(vQC_MiniMap) end)
 			vQC_MiniMap:SetScript("OnLeave", function() ToolTipsOnly(0) end)
-			vQC_MiniMap:SetScript("OnDragStart", function()
-				vQC_MiniMap:StartMoving()
-				vQC_MiniMap:SetScript("OnUpdate", UpdateMiniMapButton(1))
-			end)
-			vQC_MiniMap:SetScript("OnDragStop", function()
-				vQC_MiniMap:StopMovingOrSizing()
-				vQC_MiniMap:SetScript("OnUpdate", nil)
-				UpdateMiniMapButton(1)
-			end)
-	local vQC_MiniMapB = CreateFrame("Button", "vQC_MiniMapB", Minimap)
-		vQC_MiniMapB:SetFrameLevel(8)
-		vQC_MiniMapB:SetSize(30, 30)
-		vQC_MiniMapB:SetNormalTexture("Interface\\ENCOUNTERJOURNAL\\UI-EncounterJournalTextures")
-		vQC_MiniMapB:GetNormalTexture():SetTexCoord(0.898, 0.269, 0.898, 0.322, 1, 0.269, 1, 0.322)
-		vQC_MiniMapB:ClearAllPoints()
-		vQC_MiniMapB:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", -15, 12)
-		vQC_MiniMapB:SetMovable(true)
-		vQC_MiniMapB:RegisterForDrag("LeftButton")
-			vQC_MiniMapB:SetScript("OnClick", function() WorldBossCheck(1) end)
-			vQC_MiniMapB:SetScript("OnDragStart", function()
-				vQC_MiniMapB:StartMoving()
-				vQC_MiniMapB:SetScript("OnUpdate", UpdateMiniMapButton(2))
-			end)
-			vQC_MiniMapB:SetScript("OnDragStop", function()
-				vQC_MiniMapB:StopMovingOrSizing()
-				vQC_MiniMapB:SetScript("OnUpdate", nil)
-				UpdateMiniMapButton(2)
-			end)
-			
 ------------------------------------------------------------------------
 -- Mini Frame for Quest Log/World Frame
 ------------------------------------------------------------------------
@@ -1126,8 +1092,8 @@ end
 			vQC_Title.Text:SetPoint("CENTER", vQC_Title)
 			vQC_Title.Text:SetText(vQC_AppTitle)
 			local vQC_TitleX = CreateFrame("Button", "vQC_TitleX", vQC_Title, "UIPanelCloseButton")
-				vQC_TitleX:SetSize(26,26)
-				vQC_TitleX:SetPoint("RIGHT", vQC_Title, 0, 0)
+				vQC_TitleX:SetSize(20, 20)
+				vQC_TitleX:SetPoint("TOPRIGHT", vQC_Title, -2, -2)
 				vQC_TitleX:SetScript("OnClick", function() vQC_Main:Hide() end)
 -- Main Quest Input
 	local vQC_Quest = CreateFrame("Frame", "vQC_Quest", vQC_Main, BackdropTemplateMixin and "BackdropTemplate")
@@ -1400,7 +1366,8 @@ end
 			vQC_ATTRScr:SetHeight(vQC_ATTResult:GetHeight()-12)
 				vQC_ATTArea = CreateFrame("EditBox", "vQC_ATTArea", vQC_ATTRScr)
 				vQC_ATTArea:SetWidth(200)
-				vQC_ATTArea:SetFont(FontStyle[1], Font_Sm)
+				--vQC_ATTArea:SetFont(FontStyle[1], Font_Sm, "OUTLINE,MONOCHROME")
+				vQC_ATTArea:SetFontObject(GameFontNormalSmall)
 				vQC_ATTArea:SetAutoFocus(false)
 				vQC_ATTArea:SetMultiLine(true)
 				vQC_ATTArea:EnableMouse(false)
@@ -1543,10 +1510,6 @@ end
 			vQC_MainWBIcon:GetNormalTexture():SetTexCoord(0.898, 0.269, 0.898, 0.322, 1, 0.269, 1, 0.322)
 			vQC_MainWBIcon:SetScript("OnClick", function() WorldBossCheck(1) end)
 			
-			-- vQC_MiniMapB:GetNormalTexture():SetTexCoord(460/512, 512/512, 275/1024, 330/1024)
-			-- Top Left, Top Right, Bottom Left, Bottom Right
-			-- print(vQC_MainWBIcon:GetNormalTexture():GetTexCoord())
-
 		-- NPC Info Icon
 		local vQC_MainNPCIcon = CreateFrame("Button", "vQC_MainNPCIcon", vQC_SideTab)
 			vQC_MainNPCIcon:SetSize(33,33)
