@@ -133,7 +133,7 @@
 		"Legion",									-- 07 Legion
 		"Battle of Azeroth",						-- 08 Battle of Azeroth
 		"Shadowlands",								-- 09 Shadowlands
-		"",											-- 10 Reserved
+		"Dragonflight",								-- 10 Dragonflight
 		"Broken Isles (Legion)",					-- 11 Legion
 		"Argus (Legion)",							-- 12 Legion
 		"Nazjatar (BfA)",							-- 13 Battle of Azeroth
@@ -141,6 +141,7 @@
 		"Warfront: Darkshore (BfA)",				-- 15 Battle of Azeroth
 		"N'Zoth: Uldum (BfA)",						-- 16 Battle of Azeroth
 		"N'Zoth: Vale of Eternal Blossoms (BfA)",	-- 17 Battle of Azeroth
+		
 	}
 	local ExpacColor = {
 		"000000",									-- 01 Not Used Classic
@@ -152,7 +153,7 @@
 		"DEFF45",									-- 07 Legion
 		"65B3FF",									-- 08 Battle of Azeroth
 		"CCCDD4",									-- 09 Shadowlands
-		"000000",									-- 10 Reserved
+		"CD7F32",									-- 10 Dragonflight
 		"DEFF45",									-- 11 Legion
 		"DEFF45",									-- 12 Legion
 		"65B3FF",									-- 13 Battle of Azeroth
@@ -226,6 +227,11 @@
 		{ 64531, 9, 60, 2456, "Mawsworn Caster", "Mor'geth, Tormentor of the Damned", 1543, .691, .442, },		--49
 			--Zereth Mortis
 		{ 65143, 9, 60, 2468, "Guardian of the First Ones", "Antros <Keeper of the Antecedents>", 1970, .488, .054, },	--50
+	--Dragonflight
+		{ 69927, 10, 70, 2517, "bazualthedradedflame", "Bazual, the Dreaded Flame", 2024, .794, .366, },		--51
+		{ 69928, 10, 70, 2518, "liskanoththefuturebane", "Liskanoth, the Futurebane", 2085, .545, .688, },		--52
+		{ 69929, 10, 70, 2515, "strunraantheskysmisery", "Strunraan, the Sky's Misery", 2023, .820, .760, },		--53
+		{ 69930, 10, 70, 2506, "basrikrontheshalewing", "Basrikron, the Shale Win", 2022, .550, .777, },		--54
 	}
 ------------------------------------------------------------------------
 -- World Boss Checker
